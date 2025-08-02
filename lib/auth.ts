@@ -145,10 +145,17 @@ export const authOptions = {
             token.name = `${hr.firstName} ${hr.lastName}`;
             token.id = hr.id;
             console.log("JWT Callback - Set userType to hr");
-          } else {
+          } else if (candidate && hr) {
+            // User exists in both tables - this is the case we're hitting
+            // Since the validation was successful for candidate, prioritize candidate
+            token.userType = "candidate";
+            token.name = `${candidate.firstName} ${candidate.lastName}`;
+            token.id = candidate.id;
             console.log(
-              "JWT Callback - User not found or exists in both tables"
+              "JWT Callback - User exists in both tables, setting to candidate"
             );
+          } else {
+            console.log("JWT Callback - User not found in either table");
           }
         } catch (error) {
           console.error("Database error in JWT callback:", error);
