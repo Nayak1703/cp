@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// OTP table for email verification
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@map("otp")
+}
+
+// Candidate info table
+model CandidateInfo {
+  id               String   @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String   @unique
+  password         String   // Removed @unique constraint
+  age              Int?
+  currentRole      String?
+  totalExperience  String?
+  location         String?
+  expectedCTC      String?
+  skills           String?   // JSON array
+  portfolioLink    String?
+  githubLink       String?
+  linkedinLink     String?
+  twitterLink      String?
+  resume           String?   // File path/URL
+  readyToRelocate  Boolean?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("candidate_info")
+}
+
+// HR info table - NEW
+model HrInfo {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  scope       String   // Scope within organization
+  email       String   @unique
+  password    String   // Hashed password
+  phoneNo     String?
+  designation String   // Job designation
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hr_info")
+}
