@@ -127,10 +127,27 @@ export const authOptions = {
         session.user.name = token.name as string;
         session.user.email = token.email as string;
 
-        // For Google OAuth users, only set userType if it's already determined
-        // Let the callback page handle role validation
-        if (token.userType) {
-          session.user.userType = token.userType as string;
+        // For Google OAuth users, determine userType based on database
+        if (!token.userType && token.email) {
+          const [candidate, hr] = await Promise.all([
+            db.candidateInfo.findUnique({
+              where: { email: token.email as string },
+            }),
+            db.hrInfo.findUnique({ where: { email: token.email as string } }),
+          ]);
+
+          // Set userType based on where the user exists
+          if (candidate && !hr) {
+            session.user.userType = "candidate";
+            session.user.name = `${candidate.firstName} ${candidate.lastName}`;
+            session.user.id = candidate.id;
+          } else if (hr && !candidate) {
+            session.user.userType = "hr";
+            session.user.name = `${hr.firstName} ${hr.lastName}`;
+            session.user.id = hr.id;
+          }
+          // If user exists in both tables or neither, don't set userType
+          // This will be handled by the callback page
         }
       }
       return session;

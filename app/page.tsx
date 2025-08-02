@@ -44,18 +44,16 @@ export default function Home() {
   useEffect(() => {
     if (status === "loading") return; // Still loading session
 
-    if (session?.user) {
-      // User is authenticated, redirect to appropriate dashboard
+    if (session?.user?.userType) {
+      // User is authenticated with userType, redirect to appropriate dashboard
       if (session.user.userType === "hr") {
         router.push("/hr/dashboard");
       } else if (session.user.userType === "candidate") {
         router.push("/candidate/dashboard");
-      } else if (!session.user.userType) {
-        // User is authenticated but doesn't have a userType set
-        // This means they need to select a role (Google OAuth user in both tables)
-        router.push("/login?error=RoleSelectionRequired");
       }
     }
+    // If no userType, don't redirect - let them stay on the homepage
+    // They can manually go to login if needed
   }, [session, status, router]);
 
   const handleCloseModal = () => {
@@ -78,8 +76,8 @@ export default function Home() {
     );
   }
 
-  // If user is authenticated, show loading while redirecting
-  if (session?.user) {
+  // If user is authenticated with userType, show loading while redirecting
+  if (session?.user?.userType) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
