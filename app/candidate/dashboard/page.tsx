@@ -7,18 +7,30 @@ export default async function CandidateDashboard() {
   // Server-side authentication check
   const session = await getServerSession(authOptions);
 
+  console.log("Candidate Dashboard - Session:", {
+    user: session?.user,
+    userType: session?.user?.userType,
+    email: session?.user?.email,
+    name: session?.user?.name,
+  });
+
   // No session - redirect to login
   if (!session) {
     redirect("/login");
   }
 
   // Wrong user type - redirect to appropriate dashboard
-  if (session.user.userType !== "candidate") {
+  if (session.user.userType && session.user.userType !== "candidate") {
     if (session.user.userType === "hr") {
       redirect("/hr/dashboard");
     } else {
       redirect("/login");
     }
+  }
+
+  // If userType is not set, redirect to login to select role
+  if (!session.user.userType) {
+    redirect("/login?error=RoleSelectionRequired");
   }
 
   // User is authenticated candidate - show dashboard

@@ -127,27 +127,40 @@ export const authOptions = {
         session.user.name = token.name as string;
         session.user.email = token.email as string;
 
-        // For Google OAuth users, determine userType based on database
+        // For Google OAuth users, try to determine userType based on database
         if (!token.userType && token.email) {
-          const [candidate, hr] = await Promise.all([
-            db.candidateInfo.findUnique({
-              where: { email: token.email as string },
-            }),
-            db.hrInfo.findUnique({ where: { email: token.email as string } }),
-          ]);
+          try {
+            const [candidate, hr] = await Promise.all([
+              db.candidateInfo.findUnique({
+                where: { email: token.email as string },
+              }),
+              db.hrInfo.findUnique({ where: { email: token.email as string } }),
+            ]);
 
-          // Set userType based on where the user exists
-          if (candidate && !hr) {
-            session.user.userType = "candidate";
-            session.user.name = `${candidate.firstName} ${candidate.lastName}`;
-            session.user.id = candidate.id;
-          } else if (hr && !candidate) {
-            session.user.userType = "hr";
-            session.user.name = `${hr.firstName} ${hr.lastName}`;
-            session.user.id = hr.id;
+            // Set userType based on where the user exists
+            if (candidate && !hr) {
+              session.user.userType = "candidate";
+              session.user.name = `${candidate.firstName} ${candidate.lastName}`;
+              session.user.id = candidate.id;
+              // Update token for persistence
+              token.userType = "candidate";
+              token.name = `${candidate.firstName} ${candidate.lastName}`;
+              token.id = candidate.id;
+            } else if (hr && !candidate) {
+              session.user.userType = "hr";
+              session.user.name = `${hr.firstName} ${hr.lastName}`;
+              session.user.id = hr.id;
+              // Update token for persistence
+              token.userType = "hr";
+              token.name = `${hr.firstName} ${hr.lastName}`;
+              token.id = hr.id;
+            }
+            // If user exists in both tables or neither, don't set userType
+            // This will be handled by the callback page
+          } catch (error) {
+            console.error("Database error in session callback:", error);
+            // If database fails, don't set userType - let callback handle it
           }
-          // If user exists in both tables or neither, don't set userType
-          // This will be handled by the callback page
         }
       }
       return session;
