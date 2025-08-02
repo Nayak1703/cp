@@ -117,6 +117,33 @@ export const authOptions = {
         // Don't set userType here - let the callback page handle it
       }
 
+      // Check if we need to set userType based on URL parameters
+      // This will be set by the Google callback
+      if (token.email && !token.userType) {
+        // Try to determine userType from database if available
+        try {
+          const [candidate, hr] = await Promise.all([
+            db.candidateInfo.findUnique({
+              where: { email: token.email as string },
+            }),
+            db.hrInfo.findUnique({ where: { email: token.email as string } }),
+          ]);
+
+          if (candidate && !hr) {
+            token.userType = "candidate";
+            token.name = `${candidate.firstName} ${candidate.lastName}`;
+            token.id = candidate.id;
+          } else if (hr && !candidate) {
+            token.userType = "hr";
+            token.name = `${hr.firstName} ${hr.lastName}`;
+            token.id = hr.id;
+          }
+        } catch (error) {
+          console.error("Database error in JWT callback:", error);
+          // If database fails, don't set userType
+        }
+      }
+
       return token;
     },
 
@@ -127,41 +154,9 @@ export const authOptions = {
         session.user.name = token.name as string;
         session.user.email = token.email as string;
 
-        // For Google OAuth users, try to determine userType based on database
-        if (!token.userType && token.email) {
-          try {
-            const [candidate, hr] = await Promise.all([
-              db.candidateInfo.findUnique({
-                where: { email: token.email as string },
-              }),
-              db.hrInfo.findUnique({ where: { email: token.email as string } }),
-            ]);
-
-            // Set userType based on where the user exists
-            if (candidate && !hr) {
-              session.user.userType = "candidate";
-              session.user.name = `${candidate.firstName} ${candidate.lastName}`;
-              session.user.id = candidate.id;
-              // Update token for persistence
-              token.userType = "candidate";
-              token.name = `${candidate.firstName} ${candidate.lastName}`;
-              token.id = candidate.id;
-            } else if (hr && !candidate) {
-              session.user.userType = "hr";
-              session.user.name = `${hr.firstName} ${hr.lastName}`;
-              session.user.id = hr.id;
-              // Update token for persistence
-              token.userType = "hr";
-              token.name = `${hr.firstName} ${hr.lastName}`;
-              token.id = hr.id;
-            }
-            // If user exists in both tables or neither, don't set userType
-            // This will be handled by the callback page
-          } catch (error) {
-            console.error("Database error in session callback:", error);
-            // If database fails, don't set userType - let callback handle it
-          }
-        }
+        // For Google OAuth users, don't try to determine userType here
+        // Let the Google callback handle it since database might not be available
+        // The callback will set the userType in the token for persistence
       }
       return session;
     },
