@@ -73,6 +73,16 @@ function LoginPageContent() {
         case "SessionRequired":
           setError("Please sign in to access this page.");
           break;
+        case "NoCandidateAccount":
+          setError(
+            "No candidate account found with this email. Please sign up as a candidate first."
+          );
+          break;
+        case "NoHRAccount":
+          setError(
+            "No HR account found with this email. Please contact your administrator."
+          );
+          break;
         case "AccountCreationFailed":
           setError(
             "Failed to create account. Please try again or contact support."

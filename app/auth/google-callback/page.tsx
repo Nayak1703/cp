@@ -16,8 +16,10 @@ function GoogleCallbackContent() {
         const session = await getSession();
 
         console.log("session", session);
+        console.log("selectedRole", selectedRole);
 
         if (!session?.user) {
+          console.log("No session user found");
           router.push("/login?error=AuthenticationFailed");
           return;
         }
@@ -28,7 +30,7 @@ function GoogleCallbackContent() {
           return;
         }
 
-        // Check if selected role matches user's actual role in database
+        // Check if user exists in the selected role's database table
         const response = await fetch("/api/auth/validate-role", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -39,36 +41,21 @@ function GoogleCallbackContent() {
         });
 
         const validation = await response.json();
+        console.log("validation result", validation);
 
         if (!validation.valid) {
-          // If user doesn't exist, create account for them
-          if (
-            validation.error === "CandidateNotFound" ||
-            validation.error === "HRNotFound"
-          ) {
-            const createResponse = await fetch("/api/auth/create-google-user", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: session.user.email,
-                name: session.user.name,
-                role: selectedRole,
-              }),
-            });
-
-            const createResult = await createResponse.json();
-
-            if (!createResult.success) {
-              router.push(`/login?error=AccountCreationFailed`);
-              return;
-            }
+          console.log("Validation failed:", validation.error);
+          // User doesn't exist in the selected role's database
+          if (selectedRole === "candidate") {
+            router.push("/login?error=NoCandidateAccount");
           } else {
-            router.push(`/login?error=${validation.error}`);
-            return;
+            router.push("/login?error=NoHRAccount");
           }
+          return;
         }
 
-        // Redirect to appropriate dashboard
+        // User exists in the selected role's database - redirect to appropriate dashboard
+        console.log("Validation successful, redirecting to dashboard");
         if (selectedRole === "hr") {
           router.push("/hr/dashboard");
         } else {

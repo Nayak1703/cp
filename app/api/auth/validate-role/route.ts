@@ -6,14 +6,18 @@ export async function POST(request: NextRequest) {
   try {
     const { email, selectedRole } = await request.json();
 
+    console.log("Validating role:", { email, selectedRole });
+
     if (selectedRole === "candidate") {
       const candidate = await db.candidateInfo.findUnique({
         where: { email },
       });
 
       if (candidate) {
+        console.log("Candidate found:", candidate.email);
         return NextResponse.json({ valid: true });
       } else {
+        console.log("Candidate not found for email:", email);
         return NextResponse.json({
           valid: false,
           error: "CandidateNotFound",
@@ -27,8 +31,10 @@ export async function POST(request: NextRequest) {
       });
 
       if (hr) {
+        console.log("HR found:", hr.email);
         return NextResponse.json({ valid: true });
       } else {
+        console.log("HR not found for email:", email);
         return NextResponse.json({
           valid: false,
           error: "HRNotFound",

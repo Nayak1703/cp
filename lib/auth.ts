@@ -96,13 +96,9 @@ export const authOptions = {
   callbacks: {
     async signIn({ user, account }: SignInParams) {
       if (account?.provider === "google") {
-        const [candidate, hr] = await Promise.all([
-          db.candidateInfo.findUnique({ where: { email: user.email! } }),
-          db.hrInfo.findUnique({ where: { email: user.email! } }),
-        ]);
-
-        // Allow login if user exists in either table
-        return !!(candidate || hr);
+        // For Google OAuth, always allow sign in
+        // The callback page will handle role validation
+        return true;
       }
       return true;
     },
@@ -115,11 +111,10 @@ export const authOptions = {
         token.email = user.email;
       }
 
-      // For Google OAuth, don't set userType in JWT callback
-      // Let the role selection in the callback handle it
-      if (account?.provider === "google" && user?.email && !token.userType) {
-        // Store the email for later use, but don't set userType yet
+      // For Google OAuth, store the email but don't set userType yet
+      if (account?.provider === "google" && user?.email) {
         token.email = user.email;
+        // Don't set userType here - let the callback page handle it
       }
 
       return token;
@@ -130,28 +125,12 @@ export const authOptions = {
         session.user.id = token.id as string;
         session.user.userType = token.userType as string;
         session.user.name = token.name as string;
+        session.user.email = token.email as string;
 
-        // For Google OAuth users, if userType is not set, try to determine it
-        if (!token.userType && token.email) {
-          const [candidate, hr] = await Promise.all([
-            db.candidateInfo.findUnique({
-              where: { email: token.email as string },
-            }),
-            db.hrInfo.findUnique({ where: { email: token.email as string } }),
-          ]);
-
-          // Only set userType if user exists in exactly one table
-          if (candidate && !hr) {
-            session.user.userType = "candidate";
-            session.user.name = `${candidate.firstName} ${candidate.lastName}`;
-            session.user.id = candidate.id;
-          } else if (hr && !candidate) {
-            session.user.userType = "hr";
-            session.user.name = `${hr.firstName} ${hr.lastName}`;
-            session.user.id = hr.id;
-          }
-          // If user exists in both tables, don't set userType
-          // This will force the user to select a role
+        // For Google OAuth users, only set userType if it's already determined
+        // Let the callback page handle role validation
+        if (token.userType) {
+          session.user.userType = token.userType as string;
         }
       }
       return session;
