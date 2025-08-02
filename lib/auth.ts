@@ -104,6 +104,8 @@ export const authOptions = {
     },
 
     async jwt({ token, user, account }: JwtParams) {
+      console.log("JWT Callback - Input:", { user, account, token });
+
       if (user) {
         token.id = user.id;
         token.userType = user.userType;
@@ -114,12 +116,14 @@ export const authOptions = {
       // For Google OAuth, store the email but don't set userType yet
       if (account?.provider === "google" && user?.email) {
         token.email = user.email;
+        console.log("Google OAuth - Setting email:", user.email);
         // Don't set userType here - let the callback page handle it
       }
 
       // Check if we need to set userType based on URL parameters
       // This will be set by the Google callback
       if (token.email && !token.userType) {
+        console.log("JWT Callback - Checking database for userType");
         // Try to determine userType from database if available
         try {
           const [candidate, hr] = await Promise.all([
@@ -129,14 +133,22 @@ export const authOptions = {
             db.hrInfo.findUnique({ where: { email: token.email as string } }),
           ]);
 
+          console.log("JWT Callback - Database results:", { candidate, hr });
+
           if (candidate && !hr) {
             token.userType = "candidate";
             token.name = `${candidate.firstName} ${candidate.lastName}`;
             token.id = candidate.id;
+            console.log("JWT Callback - Set userType to candidate");
           } else if (hr && !candidate) {
             token.userType = "hr";
             token.name = `${hr.firstName} ${hr.lastName}`;
             token.id = hr.id;
+            console.log("JWT Callback - Set userType to hr");
+          } else {
+            console.log(
+              "JWT Callback - User not found or exists in both tables"
+            );
           }
         } catch (error) {
           console.error("Database error in JWT callback:", error);
@@ -144,6 +156,7 @@ export const authOptions = {
         }
       }
 
+      console.log("JWT Callback - Final token:", token);
       return token;
     },
 
