@@ -1,8 +1,25 @@
-import NextAuth from "next-auth";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "./db";
 import bcrypt from "bcryptjs";
+
+// Type definitions for auth callbacks
+interface SignInParams {
+  user: any;
+  account: any;
+}
+
+interface JwtParams {
+  token: any;
+  user: any;
+  account: any;
+}
+
+interface SessionParams {
+  session: any;
+  token: any;
+}
 
 export const authOptions = {
   providers: [
@@ -71,10 +88,13 @@ export const authOptions = {
       },
     }),
   ],
-  session: { strategy: "jwt" as const },
+  session: {
+    strategy: "jwt" as const,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: { signIn: "/login" },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account }: SignInParams) {
       if (account?.provider === "google") {
         const [candidate, hr] = await Promise.all([
           db.candidateInfo.findUnique({ where: { email: user.email! } }),
@@ -87,7 +107,7 @@ export const authOptions = {
       return true;
     },
 
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account }: JwtParams) {
       if (user) {
         token.id = user.id;
         token.userType = user.userType;
@@ -95,32 +115,44 @@ export const authOptions = {
         token.email = user.email;
       }
 
-      // For Google OAuth, determine user type from database
+      // For Google OAuth, don't set userType in JWT callback
+      // Let the role selection in the callback handle it
       if (account?.provider === "google" && user?.email && !token.userType) {
-        const [candidate, hr] = await Promise.all([
-          db.candidateInfo.findUnique({ where: { email: user.email } }),
-          db.hrInfo.findUnique({ where: { email: user.email } }),
-        ]);
-
-        if (candidate) {
-          token.id = candidate.id;
-          token.userType = "candidate";
-          token.name = `${candidate.firstName} ${candidate.lastName}`;
-        } else if (hr) {
-          token.id = hr.id;
-          token.userType = "hr";
-          token.name = `${hr.firstName} ${hr.lastName}`;
-        }
+        // Store the email for later use, but don't set userType yet
+        token.email = user.email;
       }
 
       return token;
     },
 
-    async session({ session, token }) {
+    async session({ session, token }: SessionParams) {
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.userType = token.userType as string;
         session.user.name = token.name as string;
+
+        // For Google OAuth users, if userType is not set, try to determine it
+        if (!token.userType && token.email) {
+          const [candidate, hr] = await Promise.all([
+            db.candidateInfo.findUnique({
+              where: { email: token.email as string },
+            }),
+            db.hrInfo.findUnique({ where: { email: token.email as string } }),
+          ]);
+
+          // Only set userType if user exists in exactly one table
+          if (candidate && !hr) {
+            session.user.userType = "candidate";
+            session.user.name = `${candidate.firstName} ${candidate.lastName}`;
+            session.user.id = candidate.id;
+          } else if (hr && !candidate) {
+            session.user.userType = "hr";
+            session.user.name = `${hr.firstName} ${hr.lastName}`;
+            session.user.id = hr.id;
+          }
+          // If user exists in both tables, don't set userType
+          // This will force the user to select a role
+        }
       }
       return session;
     },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, getSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
@@ -14,10 +14,10 @@ import {
   ArrowRight,
   Loader2,
   AlertCircle,
-  Briefcase,
   LogIn,
   Users,
   UserCheck,
+  Building2,
 } from "lucide-react";
 
 // Form validation schema
@@ -29,7 +29,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -72,6 +72,14 @@ export default function LoginPage() {
           break;
         case "SessionRequired":
           setError("Please sign in to access this page.");
+          break;
+        case "AccountCreationFailed":
+          setError(
+            "Failed to create account. Please try again or contact support."
+          );
+          break;
+        case "RoleSelectionRequired":
+          setError("Please select your role (HR or Candidate) to continue.");
           break;
         default:
           setError("An authentication error occurred. Please try again.");
@@ -118,16 +126,12 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
-      // Pass role via callback URL
-      const callbackUrl = `${window.location.origin}/auth/google-callback?role=${selectedRole}`;
-
       const result = await signIn("google", {
         redirect: false,
-        callbackUrl: callbackUrl,
+        callbackUrl: `/auth/google-callback?role=${selectedRole}`,
       });
 
       if (result?.url) {
-        // Redirect to the callback URL
         window.location.href = result.url;
       } else if (result?.error) {
         setError("Google sign in failed. Please try again.");
@@ -208,16 +212,29 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-8 sm:p-10">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="p-3 bg-blue-500/20 rounded-2xl">
+                <Building2 className="h-8 w-8 text-blue-400" />
+              </div>
+              <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
+            </div>
+            <p className="text-slate-400 text-lg">
+              Sign in to your account to continue
+            </p>
+          </div>
+
           {/* Role Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-3">
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-slate-300 mb-4">
               Select Your Role
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => setSelectedRole("candidate")}
-                className={`flex items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                   selectedRole === "candidate"
                     ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
                     : "bg-slate-700/30 border-slate-600/50 text-slate-400 hover:border-slate-500/70"
@@ -229,7 +246,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setSelectedRole("hr")}
-                className={`flex items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                   selectedRole === "hr"
                     ? "bg-purple-500/20 border-purple-500/50 text-purple-300"
                     : "bg-slate-700/30 border-slate-600/50 text-slate-400 hover:border-slate-500/70"
@@ -252,7 +269,7 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-6">
-            {/* Google Login Button - Available for both roles */}
+            {/* Google Login Button */}
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
@@ -286,7 +303,9 @@ export default function LoginPage() {
                     Signing in...
                   </div>
                 ) : (
-                  `Continue with Google${selectedRole === "hr" ? " (HR)" : ""}`
+                  `Continue with Google as ${
+                    selectedRole === "hr" ? "HR" : "Candidate"
+                  }`
                 )}
               </span>
             </button>
@@ -302,30 +321,21 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Role-specific notice */}
-            {selectedRole === "hr" && (
-              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-                <p className="text-purple-300 text-sm text-center">
-                  HR Login: Use your company credentials or Google account
-                </p>
-              </div>
-            )}
-
             {/* Login Form */}
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <div className="space-y-2">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-3">
                 <label className="block text-sm font-medium text-slate-300">
                   Email Address
                 </label>
                 <div className="relative">
                   <Mail
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
                     size={18}
                   />
                   <input
                     {...form.register("email")}
                     type="email"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                     placeholder="Enter your email"
                     disabled={loading}
                   />
@@ -337,26 +347,26 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="block text-sm font-medium text-slate-300">
                   Password
                 </label>
                 <div className="relative">
                   <Lock
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
                     size={18}
                   />
                   <input
                     {...form.register("password")}
                     type={showPassword ? "text" : "password"}
-                    className="w-full pl-10 pr-12 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                    className="w-full pl-12 pr-12 py-4 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                     placeholder="Enter your password"
                     disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
                     disabled={loading}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -460,5 +470,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

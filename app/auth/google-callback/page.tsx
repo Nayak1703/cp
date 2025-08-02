@@ -1,11 +1,11 @@
 // app/auth/google-callback/page.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession } from "next-auth/react";
 
-export default function GoogleCallback() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedRole = searchParams.get("role") as "hr" | "candidate";
@@ -14,6 +14,8 @@ export default function GoogleCallback() {
     const handleCallback = async () => {
       try {
         const session = await getSession();
+
+        console.log("session", session);
 
         if (!session?.user) {
           router.push("/login?error=AuthenticationFailed");
@@ -39,8 +41,31 @@ export default function GoogleCallback() {
         const validation = await response.json();
 
         if (!validation.valid) {
-          router.push(`/login?error=${validation.error}`);
-          return;
+          // If user doesn't exist, create account for them
+          if (
+            validation.error === "CandidateNotFound" ||
+            validation.error === "HRNotFound"
+          ) {
+            const createResponse = await fetch("/api/auth/create-google-user", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: session.user.email,
+                name: session.user.name,
+                role: selectedRole,
+              }),
+            });
+
+            const createResult = await createResponse.json();
+
+            if (!createResult.success) {
+              router.push(`/login?error=AccountCreationFailed`);
+              return;
+            }
+          } else {
+            router.push(`/login?error=${validation.error}`);
+            return;
+          }
         }
 
         // Redirect to appropriate dashboard
@@ -65,5 +90,22 @@ export default function GoogleCallback() {
         <p className="text-white">Completing Google sign in...</p>
       </div>
     </div>
+  );
+}
+
+export default function GoogleCallback() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-white">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,7 @@ import {
   CheckCircle,
   Loader2,
   Shield,
-  Briefcase,
+  Building2,
 } from "lucide-react";
 
 // Form validation schema
@@ -40,7 +40,7 @@ const otpSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 type OTPFormData = z.infer<typeof otpSchema>;
 
-export default function SignupPage() {
+function SignupPageContent() {
   const [step, setStep] = useState<"signup" | "otp" | "success">("signup");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -210,10 +210,15 @@ export default function SignupPage() {
             <>
               <div className="space-y-6">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    Create Your Account
-                  </h2>
-                  <p className="text-slate-400 text-sm">
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <div className="p-3 bg-blue-500/20 rounded-2xl">
+                      <Building2 className="h-8 w-8 text-blue-400" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-white">
+                      Create Account
+                    </h2>
+                  </div>
+                  <p className="text-slate-400 text-lg">
                     Join thousands of professionals finding their dream jobs
                   </p>
                 </div>
@@ -271,22 +276,22 @@ export default function SignupPage() {
                 {/* Signup Form */}
                 <form
                   onSubmit={signupForm.handleSubmit(onSignupSubmit)}
-                  className="space-y-5"
+                  className="space-y-6"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <label className="block text-sm font-medium text-slate-300">
                         First Name
                       </label>
                       <div className="relative">
                         <User
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
                           size={18}
                         />
                         <input
                           {...signupForm.register("firstName")}
                           type="text"
-                          className="w-full pl-10 pr-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                          className="w-full pl-12 pr-4 py-4 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                           placeholder="John"
                         />
                       </div>
@@ -297,19 +302,19 @@ export default function SignupPage() {
                       )}
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <label className="block text-sm font-medium text-slate-300">
                         Last Name
                       </label>
                       <div className="relative">
                         <User
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
                           size={18}
                         />
                         <input
                           {...signupForm.register("lastName")}
                           type="text"
-                          className="w-full pl-10 pr-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                          className="w-full pl-12 pr-4 py-4 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                           placeholder="Doe"
                         />
                       </div>
@@ -321,19 +326,19 @@ export default function SignupPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <label className="block text-sm font-medium text-slate-300">
                       Email Address
                     </label>
                     <div className="relative">
                       <Mail
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
                         size={18}
                       />
                       <input
                         {...signupForm.register("email")}
                         type="email"
-                        className="w-full pl-10 pr-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                        className="w-full pl-12 pr-4 py-4 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                         placeholder="john@example.com"
                       />
                     </div>
@@ -344,25 +349,25 @@ export default function SignupPage() {
                     )}
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <label className="block text-sm font-medium text-slate-300">
                       Password
                     </label>
                     <div className="relative">
                       <Lock
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
                         size={18}
                       />
                       <input
                         {...signupForm.register("password")}
                         type={showPassword ? "text" : "password"}
-                        className="w-full pl-10 pr-12 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                        className="w-full pl-12 pr-12 py-4 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                         placeholder="••••••••"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300"
                       >
                         {showPassword ? (
                           <EyeOff size={18} />
@@ -378,19 +383,19 @@ export default function SignupPage() {
                     )}
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <label className="block text-sm font-medium text-slate-300">
                       Confirm Password
                     </label>
                     <div className="relative">
                       <Lock
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
                         size={18}
                       />
                       <input
                         {...signupForm.register("confirmPassword")}
                         type={showConfirmPassword ? "text" : "password"}
-                        className="w-full pl-10 pr-12 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                        className="w-full pl-12 pr-12 py-4 bg-slate-700/30 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                         placeholder="••••••••"
                       />
                       <button
@@ -398,7 +403,7 @@ export default function SignupPage() {
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300"
                       >
                         {showConfirmPassword ? (
                           <EyeOff size={18} />
@@ -467,7 +472,7 @@ export default function SignupPage() {
                   onSubmit={otpForm.handleSubmit(onOTPSubmit)}
                   className="space-y-6"
                 >
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <label className="block text-sm font-medium text-slate-300 text-center">
                       Verification Code
                     </label>
@@ -582,5 +587,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupPageContent />
+    </Suspense>
   );
 }
