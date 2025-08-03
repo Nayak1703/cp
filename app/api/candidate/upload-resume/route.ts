@@ -6,6 +6,8 @@ import {
   uploadFileToS3,
   validateResumeFile,
   generateResumeKey,
+  deleteFromS3,
+  getCandidateResumeKey,
 } from "@/lib/s3-upload";
 
 export async function POST(request: NextRequest) {
@@ -50,12 +52,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique S3 key
-    const key = generateResumeKey(file.originalname);
+    // Generate unique S3 key using candidate ID
+    const key = generateResumeKey(file.name, candidate.id);
+
+    // If candidate already has a resume, delete the old one
+    if (candidate.resume) {
+      try {
+        const oldKey = getCandidateResumeKey(candidate.id);
+        await deleteFromS3(oldKey);
+      } catch (error) {
+        console.error("Error deleting old resume:", error);
+        // Continue with upload even if deletion fails
+      }
+    }
 
     // Upload to S3
     const uploadResult = await uploadFileToS3(file, key, {
-      originalName: file.originalname,
+      originalName: file.name,
       uploadedBy: session.user.email,
       candidateId: candidate.id.toString(),
     });

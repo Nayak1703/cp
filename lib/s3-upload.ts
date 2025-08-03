@@ -1,6 +1,4 @@
 import AWS from "aws-sdk";
-import multer from "multer";
-import multerS3 from "multer-s3";
 
 // Configure AWS
 AWS.config.update({
@@ -10,34 +8,6 @@ AWS.config.update({
 });
 
 const s3 = new AWS.S3();
-
-// Configure multer for S3 upload
-export const uploadToS3 = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: process.env.AWS_S3_BUCKET!,
-    metadata: function (req, file, cb) {
-      cb(null, { fieldName: file.fieldname });
-    },
-    key: function (req, file, cb) {
-      // Generate unique filename with timestamp and original name
-      const timestamp = Date.now().toString();
-      const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
-      cb(null, `resumes/${timestamp}-${originalName}`);
-    },
-  }),
-  limits: {
-    fileSize: 200 * 1024, // 200KB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Only allow PDF files
-    if (file.mimetype === "application/pdf") {
-      cb(null, true);
-    } else {
-      cb(new Error("Only PDF files are allowed"));
-    }
-  },
-});
 
 // Helper function to delete file from S3
 export const deleteFromS3 = async (key: string): Promise<void> => {
@@ -103,11 +73,13 @@ export const validateResumeFile = (
   return { isValid: true };
 };
 
-// Helper function to generate unique S3 key for resumes
-export const generateResumeKey = (originalName: string): string => {
-  const timestamp = Date.now().toString();
+// Helper function to generate unique S3 key for resumes using candidate ID
+export const generateResumeKey = (
+  originalName: string,
+  candidateId: string
+): string => {
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "_");
-  return `resumes/${timestamp}-${sanitizedName}`;
+  return `resumes/${candidateId}.pdf`;
 };
 
 // Helper function to extract key from S3 URL
@@ -122,4 +94,9 @@ export const extractKeyFromS3Url = (url: string): string | null => {
     console.error("Error extracting key from S3 URL:", error);
     return null;
   }
+};
+
+// Helper function to generate resume key for a specific candidate
+export const getCandidateResumeKey = (candidateId: string): string => {
+  return `resumes/${candidateId}.pdf`;
 };

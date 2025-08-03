@@ -124,6 +124,7 @@ export default function CandidateProfile() {
           }
         }
       }
+      setLoading(false); // Set loading to false after successful fetch
     } catch (_e) {
       console.error("Error fetching profile:", _e);
       setLoading(false);
