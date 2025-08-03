@@ -113,6 +113,12 @@ export const authOptions = {
         token.email = user.email;
       }
 
+      // Check for selected role in cookies (for Google OAuth)
+      if (token.email && !token.userType) {
+        // This will be handled by the set-session-role API
+        // The role will be set via cookies and read here
+      }
+
       // For Google OAuth, store the email but don't set userType yet
       if (account?.provider === "google" && user?.email) {
         token.email = user.email;
@@ -155,13 +161,39 @@ export const authOptions = {
         }
       }
 
-      // For Google OAuth users, don't set userType automatically
-      // The role will be set by the Google callback page after validation
+      // For Google OAuth users, check database for existing user
       if (token.email && !token.userType && account?.provider === "google") {
-        console.log(
-          "JWT Callback - Google OAuth user, waiting for role selection"
-        );
-        // Don't set userType - let the callback page handle it
+        console.log("JWT Callback - Checking database for Google OAuth user");
+        try {
+          const [candidate, hr] = await Promise.all([
+            db.candidateInfo.findUnique({
+              where: { email: token.email as string },
+            }),
+            db.hrInfo.findUnique({ where: { email: token.email as string } }),
+          ]);
+
+          if (candidate && !hr) {
+            token.userType = "candidate";
+            token.name = `${candidate.firstName} ${candidate.lastName}`;
+            token.id = candidate.id;
+            console.log("JWT Callback - Set Google OAuth user to candidate");
+          } else if (hr && !candidate) {
+            token.userType = "hr";
+            token.name = `${hr.firstName} ${hr.lastName}`;
+            token.id = hr.id;
+            console.log("JWT Callback - Set Google OAuth user to hr");
+          } else {
+            console.log(
+              "JWT Callback - Google OAuth user not found in database yet"
+            );
+            // User will be created by the validate-role API
+          }
+        } catch (error) {
+          console.error(
+            "Database error in JWT callback for Google OAuth:",
+            error
+          );
+        }
       }
 
       // console.log("JWT Callback - Final token:", token);

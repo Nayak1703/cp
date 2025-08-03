@@ -54,6 +54,15 @@ function GoogleCallbackContent() {
           return;
         }
 
+        // If a new user was created, refresh the session to get updated user data
+        if (validation.created) {
+          console.log("New user created, refreshing session");
+          // Force a session refresh by redirecting to the same page
+          // This will trigger the JWT callback to read the new user data
+          window.location.reload();
+          return;
+        }
+
         // User exists in the selected role's database - redirect to appropriate dashboard
         console.log("Validation successful, redirecting to dashboard");
 

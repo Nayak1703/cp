@@ -7,12 +7,16 @@ import { db } from "@/lib/db";
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    const { email, userType } = await request.json();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "No session found" }, { status: 401 });
+    // Use provided email or session email
+    const userEmail = email || session?.user?.email;
+
+    if (!userEmail) {
+      return NextResponse.json({ error: "No email provided" }, { status: 401 });
     }
 
-    const { selectedRole } = await request.json();
+    const selectedRole = userType;
 
     if (!selectedRole || !["hr", "candidate"].includes(selectedRole)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
@@ -22,11 +26,11 @@ export async function POST(request: NextRequest) {
     let userData;
     if (selectedRole === "hr") {
       userData = await db.hrInfo.findUnique({
-        where: { email: session.user.email },
+        where: { email: userEmail },
       });
     } else {
       userData = await db.candidateInfo.findUnique({
-        where: { email: session.user.email },
+        where: { email: userEmail },
       });
     }
 

@@ -18,10 +18,29 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ valid: true });
       } else {
         console.log("Candidate not found for email:", email);
-        return NextResponse.json({
-          valid: false,
-          error: "CandidateNotFound",
-        });
+
+        // For Google OAuth users, create a new candidate account
+        try {
+          const newCandidate = await db.candidateInfo.create({
+            data: {
+              email,
+              firstName: "Google", // Default values, user can update later
+              lastName: "User",
+              password: "google-oauth-user", // Placeholder password for OAuth users
+            },
+          });
+          console.log(
+            "Created new candidate for Google OAuth:",
+            newCandidate.email
+          );
+          return NextResponse.json({ valid: true, created: true });
+        } catch (error) {
+          console.error("Error creating candidate:", error);
+          return NextResponse.json({
+            valid: false,
+            error: "FailedToCreateCandidate",
+          });
+        }
       }
     }
 
@@ -35,10 +54,28 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ valid: true });
       } else {
         console.log("HR not found for email:", email);
-        return NextResponse.json({
-          valid: false,
-          error: "HRNotFound",
-        });
+
+        // For Google OAuth users, create a new HR account
+        try {
+          const newHR = await db.hrInfo.create({
+            data: {
+              email,
+              firstName: "Google", // Default values, user can update later
+              lastName: "HR",
+              password: "google-oauth-user", // Placeholder password for OAuth users
+              scope: "general", // Default scope
+              designation: "HR Manager", // Default designation
+            },
+          });
+          console.log("Created new HR for Google OAuth:", newHR.email);
+          return NextResponse.json({ valid: true, created: true });
+        } catch (error) {
+          console.error("Error creating HR:", error);
+          return NextResponse.json({
+            valid: false,
+            error: "FailedToCreateHR",
+          });
+        }
       }
     }
 
