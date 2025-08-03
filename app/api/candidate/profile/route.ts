@@ -152,10 +152,23 @@ export async function DELETE() {
       where: { email: session.user.email },
     });
 
-    return NextResponse.json({
+    // Create response with success message
+    const response = NextResponse.json({
       success: true,
       message: "Profile deleted successfully",
     });
+
+    // Clear any session cookies if they exist
+    response.cookies.set("next-auth.session-token", "", {
+      expires: new Date(0),
+      path: "/",
+    });
+    response.cookies.set("__Secure-next-auth.session-token", "", {
+      expires: new Date(0),
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Error deleting candidate profile:", error);
     return NextResponse.json(

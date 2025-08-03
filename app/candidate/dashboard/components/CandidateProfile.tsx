@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FileText, Edit, Trash2, Plus, ArrowLeft } from "lucide-react";
 import { LOCATIONS } from "@/src/constants";
@@ -165,8 +165,16 @@ export default function CandidateProfile() {
         method: "DELETE",
       });
 
-      if (response.ok) {
-        router.push("/");
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Sign out the user and clear session
+        await signOut({
+          callbackUrl: "/",
+          redirect: true,
+        });
+      } else {
+        alert(result.error || "Failed to delete profile");
       }
     } catch (_e) {
       console.error("Error deleting profile:", _e);

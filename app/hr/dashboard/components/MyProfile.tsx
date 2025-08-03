@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   User,
   Mail,
@@ -11,6 +13,7 @@ import {
   Key,
   Eye,
   EyeOff,
+  Trash2,
 } from "lucide-react";
 
 interface UserData {
@@ -27,6 +30,7 @@ interface MyProfileProps {
 }
 
 export default function MyProfile({ userData }: MyProfileProps) {
+  const router = useRouter();
   const [jobCount, setJobCount] = useState<number>(0);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +57,37 @@ export default function MyProfile({ userData }: MyProfileProps) {
       }
     } catch (error) {
       console.error("Error fetching job count:", error);
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete your profile? This action cannot be undone and will delete all your posted jobs."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/hr/profile", {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Sign out the user and clear session
+        await signOut({ 
+          callbackUrl: "/",
+          redirect: true 
+        });
+      } else {
+        alert(result.error || "Failed to delete profile");
+      }
+    } catch (error) {
+      console.error("Error deleting profile:", error);
+      alert("Failed to delete profile");
     }
   };
 
@@ -391,6 +426,28 @@ export default function MyProfile({ userData }: MyProfileProps) {
                       Cancel
                     </button>
                   </div>
+                </form>
+              )}
+            </div>
+
+            {/* Delete Profile Section */}
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-500/20 rounded-lg">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Delete Profile</h3>
+              </div>
+              <p className="text-slate-400 text-sm mb-4">
+                This action will permanently delete your profile and all associated data including posted jobs. This action cannot be undone.
+              </p>
+              <button
+                onClick={handleDeleteProfile}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete Profile</span>
+              </button>
                 </form>
               )}
             </div>
