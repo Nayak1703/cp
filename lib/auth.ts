@@ -21,6 +21,11 @@ interface SessionParams {
   token: any;
 }
 
+interface RedirectParams {
+  url: string;
+  baseUrl: string;
+}
+
 export const authOptions = {
   providers: [
     GoogleProvider({
@@ -94,6 +99,18 @@ export const authOptions = {
   },
   pages: { signIn: "/login" },
   callbacks: {
+    async redirect({ url, baseUrl }: RedirectParams) {
+      // For Google OAuth, redirect based on the callback URL
+      if (url.startsWith(baseUrl) && url.includes("callback")) {
+        // Check if this is a signup callback
+        if (url.includes("signup")) {
+          return `${baseUrl}/signup`;
+        } else {
+          return `${baseUrl}/login`;
+        }
+      }
+      return url;
+    },
     async signIn({ user, account }: SignInParams) {
       if (account?.provider === "google") {
         // For Google OAuth, always allow sign in
@@ -104,7 +121,7 @@ export const authOptions = {
     },
 
     async jwt({ token, user, account }: JwtParams) {
-      // console.log("JWT Callback - Input:", { user, account, token });
+      console.log("JWT Callback - Input:", { user, account, token });
 
       if (user) {
         token.id = user.id;
@@ -113,17 +130,49 @@ export const authOptions = {
         token.email = user.email;
       }
 
-      // Check for selected role in cookies (for Google OAuth)
-      if (token.email && !token.userType) {
-        // This will be handled by the set-session-role API
-        // The role will be set via cookies and read here
-      }
-
-      // For Google OAuth, store the email but don't set userType yet
+      // For Google OAuth users, handle login only (not signup)
       if (account?.provider === "google" && user?.email) {
-        token.email = user.email;
-        console.log("Google OAuth - Setting email:", user.email);
-        // Don't set userType here - let the callback page handle it
+        console.log("Google OAuth - Processing user:", user.email);
+
+        try {
+          const [candidate, hr] = await Promise.all([
+            db.candidateInfo.findUnique({
+              where: { email: user.email },
+            }),
+            db.hrInfo.findUnique({ where: { email: user.email } }),
+          ]);
+
+          // Only set session if user exists (for login)
+          if (candidate && !hr) {
+            // Candidate found - set session
+            token.userType = "candidate";
+            token.name = `${candidate.firstName} ${candidate.lastName}`;
+            token.id = candidate.id;
+            console.log("Google OAuth - Candidate found, setting session");
+          } else if (hr && !candidate) {
+            // HR found - set session
+            token.userType = "hr";
+            token.name = `${hr.firstName} ${hr.lastName}`;
+            token.id = hr.id;
+            console.log("Google OAuth - HR found, setting session");
+          } else if (!candidate && !hr) {
+            // User not found - this is fine for signup, don't set session
+            console.log(
+              "Google OAuth - User not found in database (signup flow)"
+            );
+            // Don't set userType - let the signup process handle it
+          } else {
+            // User exists in both tables - this shouldn't happen
+            console.log("Google OAuth - User exists in both tables");
+            throw new Error("User exists in both tables");
+          }
+        } catch (error) {
+          console.error(
+            "Database error in JWT callback for Google OAuth:",
+            error
+          );
+          throw error; // Re-throw to prevent login
+        }
       }
 
       // For credential-based login, determine userType from database
@@ -161,47 +210,7 @@ export const authOptions = {
         }
       }
 
-      // For Google OAuth users, check database for existing user
-      if (token.email && !token.userType && account?.provider === "google") {
-        console.log("JWT Callback - Checking database for Google OAuth user");
-        try {
-          const [candidate, hr] = await Promise.all([
-            db.candidateInfo.findUnique({
-              where: { email: token.email as string },
-            }),
-            db.hrInfo.findUnique({ where: { email: token.email as string } }),
-          ]);
-
-          if (candidate && !hr) {
-            token.userType = "candidate";
-            token.name = `${candidate.firstName} ${candidate.lastName}`;
-            token.id = candidate.id;
-            console.log("JWT Callback - Set Google OAuth user to candidate");
-          } else if (hr && !candidate) {
-            token.userType = "hr";
-            token.name = `${hr.firstName} ${hr.lastName}`;
-            token.id = hr.id;
-            console.log("JWT Callback - Set Google OAuth user to hr");
-          } else if (!candidate && !hr) {
-            console.log(
-              "JWT Callback - Google OAuth user not found in database yet"
-            );
-            // User will be created by the validate-role API
-            // Don't set userType yet - let the callback page handle it
-          } else {
-            console.log(
-              "JWT Callback - User exists in both tables, this shouldn't happen"
-            );
-          }
-        } catch (error) {
-          console.error(
-            "Database error in JWT callback for Google OAuth:",
-            error
-          );
-        }
-      }
-
-      // console.log("JWT Callback - Final token:", token);
+      console.log("JWT Callback - Final token:", token);
       return token;
     },
 

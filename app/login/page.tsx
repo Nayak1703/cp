@@ -98,6 +98,29 @@ function LoginPageContent() {
     }
   }, [urlError]);
 
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const session = await getSession();
+
+      if (session?.user?.email && session?.user?.userType) {
+        console.log(
+          "Google OAuth callback - User authenticated:",
+          session.user
+        );
+
+        // Redirect to appropriate dashboard based on user type
+        if (session.user.userType === "hr") {
+          router.push("/hr/dashboard");
+        } else if (session.user.userType === "candidate") {
+          router.push("/candidate/dashboard");
+        }
+      }
+    };
+
+    handleGoogleCallback();
+  }, [router]);
+
   // Form setup
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -139,7 +162,6 @@ function LoginPageContent() {
 
       const result = await signIn("google", {
         redirect: false,
-        callbackUrl: `/auth/google-callback?role=${selectedRole}`,
       });
 
       if (result?.url) {

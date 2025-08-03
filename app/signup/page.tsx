@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, signOut, getSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -70,12 +70,51 @@ function SignupPageContent() {
     },
   });
 
+  // Handle Google OAuth signup callback
+  useEffect(() => {
+    const handleGoogleSignupCallback = async () => {
+      const session = await getSession();
+
+      if (session?.user?.email) {
+        console.log(
+          "Google OAuth signup callback - User authenticated:",
+          session.user
+        );
+
+        try {
+          // Call the signup API to create candidate account
+          const response = await fetch("/api/auth/google-signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            console.log("Google OAuth signup successful");
+            // Sign out to clear session and redirect to login
+            await signOut({ redirect: false });
+            router.push("/login");
+          } else {
+            setError(result.error || "Signup failed");
+          }
+        } catch (error) {
+          setError("Failed to complete signup");
+        }
+      }
+    };
+
+    handleGoogleSignupCallback();
+  }, [router]);
+
   // Handle Google OAuth signup
   const handleGoogleSignup = async () => {
     try {
       setLoading(true);
       setError("");
-      await signIn("google", { callbackUrl: "/login" });
+
+      // Use NextAuth for Google OAuth but redirect to signup page
+      await signIn("google", { callbackUrl: "/signup" });
     } catch (error) {
       setError("Google signup failed. Please try again.");
     } finally {
