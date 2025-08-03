@@ -6,6 +6,30 @@ export interface User {
   userType: "candidate" | "hr";
 }
 
+// Candidate Types
+export interface CandidateInfo {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  age?: number;
+  currentRole?: string;
+  totalExperience?: string;
+  location?: string;
+  expectedCTC?: string;
+  skills?: string;
+  education?: string;
+  work?: string;
+  portfolioLink?: string;
+  githubLink?: string;
+  linkedinLink?: string;
+  twitterLink?: string;
+  resume?: string;
+  readyToRelocate?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Job Types
 export interface Job {
   jobId: number;

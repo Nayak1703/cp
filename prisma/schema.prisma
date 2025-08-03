@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// OTP table for email verification
 model Otp {
   id        String   @id @default(cuid())
   email     String
@@ -18,89 +17,116 @@ model Otp {
   @@map("otp")
 }
 
-// Candidate info table
 model CandidateInfo {
-  id               String   @id @default(cuid())
-  firstName        String
-  lastName         String
-  email            String   @unique
-  password         String   // Removed @unique constraint
-  age              Int?
-  currentRole      String?
-  totalExperience  String?
-  location         String?
-  expectedCTC      String?
-  skills           String?   // JSON array
-  portfolioLink    String?
-  githubLink       String?
-  linkedinLink     String?
-  twitterLink      String?
-  resume           String?   // File path/URL
-  readyToRelocate  Boolean?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String         @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String         @unique
+  password        String
+  age             Int?
+  currentRole     String?
+  totalExperience String?
+  location        String?
+  expectedCTC     String?
+  skills          String?
+  education       String? @db.Text
+  work            String? @db.Text
+  portfolioLink   String?
+  githubLink      String?
+  linkedinLink    String?
+  twitterLink     String?
+  resume          String?
+  readyToRelocate Boolean?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  applications    Applications[]
+  savedJobs       SavedJobs[]
 
   @@map("candidate_info")
 }
 
-// HR info table
 model HrInfo {
   id          String   @id @default(cuid())
   firstName   String
   lastName    String
-  scope       String   // Scope within organization
+  scope       String
   email       String   @unique
-  password    String   // Hashed password
+  password    String
   phoneNo     String?
-  designation String   // Job designation
+  designation String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relationship: HR can post multiple jobs
   jobs        Jobs[]
 
   @@map("hr_info")
 }
 
-// Jobs table - NEW MODEL TO ADD
 model Jobs {
-  jobId          Int       @id @default(autoincrement())
+  jobId          Int            @id @default(autoincrement())
   role           String
   designation    String
-  jobStatus      JobStatus @default(ACTIVE)
+  jobStatus      JobStatus      @default(ACTIVE)
   experience     Experience
   department     Department
   location       Location
-  jobDescription String    @db.Text
-  postedOn       DateTime  @default(now())
-  hrId           String    // Foreign key to HrInfo
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  
-  // Relationship: Each job belongs to one HR
-  hr             HrInfo    @relation(fields: [hrId], references: [id])
-  
-  // Indexes for better performance
+  jobDescription String         @db.Text
+  postedOn       DateTime       @default(now())
+  hrId           String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  applications   Applications[]
+  savedJobs      SavedJobs[]
+  hr             HrInfo         @relation(fields: [hrId], references: [id])
+
   @@index([jobStatus])
   @@index([department])
   @@index([location])
   @@index([experience])
   @@index([postedOn])
+  @@index([hrId], map: "jobs_hrId_fkey")
   @@map("jobs")
 }
 
-// Enums for Jobs
+model Applications {
+  applicationId     String            @id @default(cuid())
+  jobId             Int
+  candidateId       String
+  applicationStatus ApplicationStatus @default(REVIEWING)
+  appliedOn         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  candidate         CandidateInfo     @relation(fields: [candidateId], references: [id])
+  job               Jobs              @relation(fields: [jobId], references: [jobId])
+
+  @@index([candidateId], map: "applications_candidateId_fkey")
+  @@index([jobId], map: "applications_jobId_fkey")
+  @@map("applications")
+}
+
+model SavedJobs {
+  id          String        @id @default(cuid())
+  jobId       Int
+  candidateId String
+  savedOn     DateTime      @default(now())
+  candidate   CandidateInfo @relation(fields: [candidateId], references: [id])
+  job         Jobs          @relation(fields: [jobId], references: [jobId])
+
+  @@unique([jobId, candidateId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@map("saved_jobs")
+}
+
 enum JobStatus {
   ACTIVE
   INACTIVE
 }
 
 enum Experience {
-  LESS_THAN_2    // < 2 years = 1
-  TWO_TO_FIVE    // 2-5 years = 2
-  FIVE_TO_EIGHT  // 5-8 years = 3
-  EIGHT_TO_TWELVE // 8-12 years = 4
-  MORE_THAN_12   // 12+ years = 5
+  LESS_THAN_2
+  TWO_TO_FIVE
+  FIVE_TO_EIGHT
+  EIGHT_TO_TWELVE
+  MORE_THAN_12
 }
 
 enum Department {
@@ -117,4 +143,10 @@ enum Location {
   DELHI
   BANGALORE
   HYDERABAD
+}
+
+enum ApplicationStatus {
+  REJECTED
+  REVIEWING
+  SHORTLISTED
 }

@@ -57,14 +57,12 @@ function GoogleCallbackContent() {
         // User exists in the selected role's database - redirect to appropriate dashboard
         console.log("Validation successful, redirecting to dashboard");
 
-        // Add a small delay to ensure session is updated
-        setTimeout(() => {
-          if (selectedRole === "hr") {
-            router.push("/hr/dashboard");
-          } else {
-            router.push("/candidate/dashboard");
-          }
-        }, 1000);
+        // Redirect to appropriate dashboard
+        if (selectedRole === "hr") {
+          router.push("/hr/dashboard");
+        } else {
+          router.push("/candidate/dashboard");
+        }
       } catch (error) {
         console.error("Callback error:", error);
         router.push("/login?error=CallbackError");

@@ -1,7 +1,8 @@
 "use client";
 
 import { Calendar, MapPin, Briefcase, Clock, Eye, User } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Job } from "@/src/types";
 import { formatDate, getExperienceText } from "@/src/utils";
 
@@ -10,6 +11,26 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job }: JobCardProps) {
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const handleViewJob = () => {
+    if (!session) {
+      // If user is not logged in, redirect to login page
+      router.push("/login");
+    } else {
+      // If user is logged in, redirect to appropriate dashboard with job details
+      if (session.user.userType === "hr") {
+        router.push(`/hr/dashboard/job/${job.jobId}`);
+      } else if (session.user.userType === "candidate") {
+        router.push(`/candidate/dashboard/job/${job.jobId}`);
+      } else {
+        // If userType is not set, redirect to login
+        router.push("/login");
+      }
+    }
+  };
+
   return (
     <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 group">
       {/* Job Status Badge */}
@@ -71,15 +92,7 @@ export default function JobCard({ job }: JobCardProps) {
 
       {/* View Job Button */}
       <button
-        onClick={() => {
-          const url = new URL(window.location.href);
-          url.searchParams.set("jobId", job.jobId.toString());
-          window.history.pushState({}, "", url.toString());
-          // Trigger a custom event to notify the parent component
-          window.dispatchEvent(
-            new CustomEvent("jobSelected", { detail: job.jobId })
-          );
-        }}
+        onClick={handleViewJob}
         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 group-hover:shadow-lg group-hover:shadow-blue-500/25"
       >
         <Eye className="h-4 w-4" />

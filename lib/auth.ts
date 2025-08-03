@@ -104,7 +104,7 @@ export const authOptions = {
     },
 
     async jwt({ token, user, account }: JwtParams) {
-      console.log("JWT Callback - Input:", { user, account, token });
+      // console.log("JWT Callback - Input:", { user, account, token });
 
       if (user) {
         token.id = user.id;
@@ -120,11 +120,11 @@ export const authOptions = {
         // Don't set userType here - let the callback page handle it
       }
 
-      // Check if we need to set userType based on URL parameters
-      // This will be set by the Google callback
-      if (token.email && !token.userType) {
-        console.log("JWT Callback - Checking database for userType");
-        // Try to determine userType from database if available
+      // For credential-based login, determine userType from database
+      if (token.email && !token.userType && !account?.provider) {
+        console.log(
+          "JWT Callback - Checking database for userType (credentials only)"
+        );
         try {
           const [candidate, hr] = await Promise.all([
             db.candidateInfo.findUnique({
@@ -145,25 +145,26 @@ export const authOptions = {
             token.name = `${hr.firstName} ${hr.lastName}`;
             token.id = hr.id;
             console.log("JWT Callback - Set userType to hr");
-          } else if (candidate && hr) {
-            // User exists in both tables - this is the case we're hitting
-            // Since the validation was successful for candidate, prioritize candidate
-            token.userType = "candidate";
-            token.name = `${candidate.firstName} ${candidate.lastName}`;
-            token.id = candidate.id;
-            console.log(
-              "JWT Callback - User exists in both tables, setting to candidate"
-            );
           } else {
-            console.log("JWT Callback - User not found in either table");
+            console.log(
+              "JWT Callback - User not found or exists in both tables"
+            );
           }
         } catch (error) {
           console.error("Database error in JWT callback:", error);
-          // If database fails, don't set userType
         }
       }
 
-      console.log("JWT Callback - Final token:", token);
+      // For Google OAuth users, don't set userType automatically
+      // The role will be set by the Google callback page after validation
+      if (token.email && !token.userType && account?.provider === "google") {
+        console.log(
+          "JWT Callback - Google OAuth user, waiting for role selection"
+        );
+        // Don't set userType - let the callback page handle it
+      }
+
+      // console.log("JWT Callback - Final token:", token);
       return token;
     },
 
@@ -173,10 +174,6 @@ export const authOptions = {
         session.user.userType = token.userType as string;
         session.user.name = token.name as string;
         session.user.email = token.email as string;
-
-        // For Google OAuth users, don't try to determine userType here
-        // Let the Google callback handle it since database might not be available
-        // The callback will set the userType in the token for persistence
       }
       return session;
     },

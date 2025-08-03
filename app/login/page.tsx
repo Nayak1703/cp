@@ -18,6 +18,7 @@ import {
   Users,
   UserCheck,
   Building2,
+  ArrowLeft,
 } from "lucide-react";
 
 // Form validation schema
@@ -220,15 +221,24 @@ function LoginPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
+      <div className="w-full max-w-lg space-y-8">
         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-8 sm:p-10">
-          {/* Header */}
+          {/* Back Button */}
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back to Home</span>
+          </button>
+
+          {/* Page Title */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="p-3 bg-blue-500/20 rounded-2xl">
                 <Building2 className="h-8 w-8 text-blue-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
+              <h2 className="text-3xl font-bold text-white">Login Page</h2>
             </div>
             <p className="text-slate-400 text-lg">
               Sign in to your account to continue

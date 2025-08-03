@@ -9,12 +9,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // Check if email already exists
+    // Check if email already exists in CandidateInfo table
     const existingCandidate = await db.candidateInfo.findUnique({
       where: { email },
     });
 
-    if (existingCandidate) {
+    // Check if email already exists in HrInfo table
+    const existingHR = await db.hrInfo.findUnique({
+      where: { email },
+    });
+
+    if (existingCandidate || existingHR) {
       return NextResponse.json(
         { exists: true, message: "This email is already taken." },
         { status: 200 }

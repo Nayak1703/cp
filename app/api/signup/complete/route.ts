@@ -23,12 +23,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email already exists (double-check)
+    // Check if email already exists in CandidateInfo table (double-check)
     const existingCandidate = await db.candidateInfo.findUnique({
       where: { email },
     });
 
-    if (existingCandidate) {
+    // Check if email already exists in HrInfo table (double-check)
+    const existingHR = await db.hrInfo.findUnique({
+      where: { email },
+    });
+
+    if (existingCandidate || existingHR) {
       return NextResponse.json(
         { error: "This email is already taken." },
         { status: 400 }
