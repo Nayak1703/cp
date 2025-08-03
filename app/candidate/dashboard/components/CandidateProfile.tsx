@@ -720,7 +720,7 @@ export default function CandidateProfile() {
                   accept=".pdf"
                   onChange={handleFileChange}
                   disabled={resumeUploading}
-                  className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600 file:cursor-pointer disabled:opacity-50"
+                  className="block w-full text-sm text-slate-400 bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600 file:cursor-pointer disabled:opacity-50 focus:outline-none focus:border-blue-500"
                 />
                 {resumeUploading && (
                   <div className="flex items-center space-x-2">

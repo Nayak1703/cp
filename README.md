@@ -1,281 +1,219 @@
-# Career Portal
+# Career Portal - Job Application Management System
 
-A modern career portal built with Next.js 15, featuring role-based authentication for HR and Candidates, job posting and browsing capabilities with a professional dark theme.
+## 🔐 Credentials
 
-## 🚀 Features
+### Owner Login (HR Management)
+
+- **Email**: owner123@gmail.com
+- **Password**: owner123
+
+**Note**: After owner login, you have rights to create new HR users, decide their scope, and share email/password. HR users can later reset their passwords.
+
+---
+
+## 📋 Project Overview
+
+A comprehensive job portal application that connects candidates with job opportunities and enables HR professionals to manage the entire recruitment process. Built with Next.js, TypeScript, and MySQL, featuring real-time job applications, resume management, and role-based access control.
+
+## 🎯 Key Features
+
+### For Candidates
+
+- **Profile Management**: Complete profile creation with education, work experience, and skills
+- **Resume Upload**: PDF resume upload with AWS S3 integration
+- **Job Discovery**: Browse and search available job openings
+- **Application Tracking**: Apply to jobs and track application status
+- **Saved Jobs**: Save interesting positions for later review
+- **Real-time Updates**: Instant notifications on application status changes
+
+### For HR Professionals
+
+- **Job Posting**: Create and manage job openings with detailed descriptions
+- **Application Management**: Review, shortlist, and manage candidate applications
+- **HR User Management**: Create and manage HR team members with scope-based permissions
+- **Dashboard Analytics**: Overview of applications, job postings, and system metrics
+- **Candidate Communication**: Direct communication with applicants
+
+### For System Owner
+
+- **HR Management**: Create new HR accounts with specific scopes and permissions
+- **System Oversight**: Monitor overall system performance and user activities
+- **Access Control**: Manage role-based permissions and user access
+
+## 🏗️ Technical Architecture
 
 ### Frontend
 
-- **Modern UI/UX**: Professional dark theme with glassmorphism effects
-- **Responsive Design**: Works seamlessly on desktop and mobile
-- **Role-based Authentication**: Separate login flows for HR and Candidates
-- **Job Browsing**: Advanced filtering and search through job listings
-- **Google OAuth**: Social login integration
-- **Email Verification**: OTP-based signup process
-- **Uniform Design**: Consistent styling across all pages
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: NextAuth.js
+- **State Management**: React Hooks
+- **Deployment**: Vercel
 
 ### Backend
 
-- **Next.js API Routes**: RESTful API endpoints
-- **Prisma ORM**: Type-safe database operations
-- **MySQL Database**: Reliable data storage
-- **NextAuth.js**: Secure authentication system
-- **Email Integration**: Nodemailer for OTP delivery
-
-## 🏗️ Architecture
-
-### Project Structure
-
-```
-career-portal/
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes
-│   ├── components/        # Reusable UI Components
-│   ├── auth/             # Authentication pages
-│   ├── candidate/        # Candidate dashboard
-│   ├── hr/              # HR dashboard
-│   ├── login/           # Login page
-│   ├── signup/          # Signup page
-│   └── page.tsx         # Home page
-├── src/                  # Source code organization
-│   ├── components/       # Shared components
-│   ├── lib/             # Library configurations
-│   ├── types/           # TypeScript type definitions
-│   ├── utils/           # Utility functions
-│   ├── hooks/           # Custom React hooks
-│   └── constants/       # Application constants
-├── lib/                  # Core libraries
-├── prisma/              # Database schema
-
-└── public/              # Static assets
-```
+- **Runtime**: Node.js with Next.js API Routes
+- **Database**: MySQL (AWS RDS)
+- **File Storage**: AWS S3 for resume uploads
+- **Authentication**: JWT with NextAuth.js
+- **Deployment**: AWS EC2
 
 ### Database Schema
 
-- **CandidateInfo**: Job seeker profiles
-- **HrInfo**: HR recruiter profiles
-- **Jobs**: Job postings with relationships
-- **Otp**: Email verification system
+- **Users**: Candidate and HR user management
+- **Jobs**: Job postings with detailed information
+- **Applications**: Job application tracking
+- **Saved Jobs**: Candidate job bookmarks
+- **OTP System**: Email verification and password reset
 
-### User Types
+## 🔄 Project Flow
 
-1. **Candidates**: Can browse and apply for jobs
-2. **HR**: Can post and manage job listings
+### 1. User Registration & Authentication
 
-## 🛠️ Tech Stack
-
-- **Frontend**: Next.js 15, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: MySQL
-- **Authentication**: NextAuth.js with Google OAuth
-- **Email**: Nodemailer
-- **Icons**: Lucide React
-
-## 📦 Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd career-portal
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   Create a `.env` file with:
-
-   ```env
-   # Database
-   DATABASE_URL="mysql://username:password@localhost:3306/career_portal"
-
-   # NextAuth
-   NEXTAUTH_URL="http://localhost:3000"
-   NEXTAUTH_SECRET="your-secret-key"
-
-   # Google OAuth
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-   # Email
-   EMAIL_FROM="your-email@gmail.com"
-   EMAIL_PASSWORD="your-app-password"
-   ```
-
-4. **Set up the database**
-
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
-
-5. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-## 🎯 Usage
-
-### Home Page (`/`)
-
-- **NavBar**: Logo and login/signup buttons
-- **Hero Section**: Company branding with statistics
-- **Jobs Section**: Filterable job listings with HR information
-
-### Authentication
-
-- **Login** (`/login`): Role-based authentication with tab selection
-- **Signup** (`/signup`): Candidate registration with email verification
-
-### Dashboards
-
-- **HR Dashboard** (`/hr/dashboard`): Job posting and management
-- **Candidate Dashboard** (`/candidate/dashboard`): Job browsing and applications
-
-## 🔧 API Endpoints
-
-### Jobs
-
-- `GET /api/jobs` - Fetch jobs with filters
-- `GET /api/jobs/[jobId]` - Get specific job details
-
-### Authentication
-
-- `POST /api/auth/role-login` - Role-based login
-- `POST /api/signup/*` - Signup flow endpoints
-
-## 🎨 UI Components
-
-### Core Components
-
-- **NavBar**: Navigation with login/signup buttons
-- **HeroSection**: Company branding and call-to-action
-- **JobFilters**: Advanced filter dropdowns
-- **JobCard**: Individual job listing with HR info
-- **JobsSection**: Main jobs listing with filtering
-
-### Design Features
-
-- **Dark Theme**: Professional glassmorphism design
-- **Responsive**: Mobile-first approach
-- **Loading States**: Smooth user experience
-- **Error Handling**: User-friendly error messages
-- **Form Validation**: Client-side validation with Zod
-
-## 🗄️ Database Schema
-
-### Jobs Table
-
-```sql
-- jobId (Primary Key)
-- role (Job title)
-- designation (Job description)
-- jobStatus (ACTIVE/INACTIVE)
-- experience (Experience level enum)
-- department (Department enum)
-- location (Location enum)
-- jobDescription (HTML content)
-- postedOn (Timestamp)
-- hrId (Foreign key to HR)
+```
+Signup → Email Verification → Role Selection → Profile Creation → Dashboard Access
 ```
 
-### Enums
+### 2. Candidate Journey
 
-- **JobStatus**: ACTIVE, INACTIVE
-- **Experience**: LESS_THAN_2, TWO_TO_FIVE, FIVE_TO_EIGHT, EIGHT_TO_TWELVE, MORE_THAN_12
-- **Department**: ENGINEERING, MARKETING, QA, DEVOPS, PRODUCT_MANAGER
-- **Location**: MUMBAI, BHUBANESWAR, DELHI, BANGALORE, HYDERABAD
+```
+Login → Browse Jobs → Apply → Upload Resume → Track Applications → Receive Updates
+```
 
-## 📁 Code Organization
+### 3. HR Journey
 
-### Type Definitions (`src/types/`)
+```
+Login → Post Jobs → Review Applications → Shortlist Candidates → Manage Team
+```
 
-- Centralized TypeScript interfaces
-- API response types
-- Form data types
-- User and job types
+### 4. Owner Journey
 
-### Constants (`src/constants/`)
+```
+Login → Create HR Accounts → Set Permissions → Monitor System → Manage Access
+```
 
-- Application constants
-- API endpoints
-- Error messages
-- Route definitions
+## 🚀 Getting Started
 
-### Utilities (`src/utils/`)
+### Prerequisites
 
-- Date formatting
-- API error handling
-- Form validation
-- Local storage helpers
+- Node.js 18+
+- MySQL Database
+- AWS Account (for S3 and RDS)
 
-### Custom Hooks (`src/hooks/`)
+### Installation
 
-- `useJobs`: Job fetching with filters
-- Reusable state management
-- API integration patterns
+```bash
+# Clone the repository
+git clone <repository-url>
 
-## 🚀 Deployment
+# Install dependencies
+npm install
 
-1. **Build the application**
+# Set up environment variables
+cp .env.example .env.local
 
-   ```bash
-   npm run build
-   ```
+# Run database migrations
+npx prisma db push
 
-2. **Start production server**
-   ```bash
-   npm start
-   ```
+# Start development server
+npm run dev
+```
 
-## 📝 Environment Variables
+### Environment Variables
 
-Make sure to configure these environment variables:
+```env
+# Database
+DATABASE_URL="mysql://user:password@host:port/database"
 
-- `DATABASE_URL`: MySQL connection string
-- `NEXTAUTH_URL`: Your application URL
-- `NEXTAUTH_SECRET`: Random secret for NextAuth
-- `GOOGLE_CLIENT_ID`: Google OAuth client ID
-- `GOOGLE_CLIENT_SECRET`: Google OAuth client secret
-- `EMAIL_FROM`: Gmail address for sending emails
-- `EMAIL_PASSWORD`: Gmail app password
+# Authentication
+NEXTAUTH_SECRET="your-secret"
+NEXTAUTH_URL="http://localhost:3000"
 
-## 🔄 Recent Improvements
+# Email
+EMAIL_SERVER_HOST="smtp.gmail.com"
+EMAIL_SERVER_PORT=587
+EMAIL_SERVER_USER="your-email@gmail.com"
+EMAIL_SERVER_PASSWORD="your-app-password"
 
-### UI/UX Enhancements
+# AWS S3
+AWS_ACCESS_KEY_ID="your-access-key"
+AWS_SECRET_ACCESS_KEY="your-secret-key"
+AWS_REGION="your-region"
+AWS_S3_BUCKET="your-bucket-name"
+```
 
-- ✅ **Uniform dark theme** across all pages
-- ✅ **Professional glassmorphism design**
-- ✅ **Consistent spacing and typography**
-- ✅ **Enhanced job cards** with HR information
-- ✅ **Improved form styling** with better UX
+## 📱 User Interface
 
-### Code Organization
+### Design Philosophy
 
-- ✅ **Industry-standard project structure**
-- ✅ **Centralized type definitions**
-- ✅ **Reusable utility functions**
-- ✅ **Custom hooks for data fetching**
-- ✅ **Constants for maintainability**
+- **Dark Theme**: Modern dark interface for better user experience
+- **Responsive Design**: Mobile-first approach with desktop optimization
+- **Accessibility**: WCAG compliant with proper focus states and keyboard navigation
+- **User-Friendly**: Intuitive navigation and clear call-to-action buttons
 
-### Performance Optimizations
+### Key Pages
 
-- ✅ **Custom hooks** for better state management
-- ✅ **Optimized API calls** with proper error handling
-- ✅ **Type-safe operations** throughout the app
-- ✅ **Efficient component structure**
+- **Landing Page**: Job listings with search and filter capabilities
+- **Dashboard**: Role-specific dashboards with relevant information
+- **Profile Management**: Comprehensive profile creation and editing
+- **Job Details**: Detailed job information with application functionality
+- **Application Tracking**: Real-time application status updates
+
+## 🔒 Security Features
+
+- **Role-Based Access Control**: Different permissions for candidates, HR, and owners
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: bcrypt for secure password storage
+- **Input Validation**: Comprehensive form validation and sanitization
+- **CORS Protection**: Cross-origin request protection
+- **File Upload Security**: File type and size validation for resume uploads
+
+## 📊 Performance & Scalability
+
+- **Database Optimization**: Proper indexing and query optimization
+- **File Storage**: AWS S3 for scalable file storage
+- **Caching**: Next.js built-in caching mechanisms
+- **CDN Integration**: Vercel's global CDN for fast content delivery
+- **Database Connection Pooling**: Efficient database connection management
+
+## 🛠️ Development & Deployment
+
+### Development Workflow
+
+1. **Feature Development**: Create feature branches from main
+2. **Testing**: Comprehensive testing before deployment
+3. **Code Review**: Peer review process for quality assurance
+4. **Deployment**: Automated deployment to staging and production
+
+### Deployment Strategy
+
+- **Frontend**: Vercel for automatic deployments
+- **Backend**: AWS EC2 with PM2 process management
+- **Database**: AWS RDS for managed MySQL service
+- **File Storage**: AWS S3 for scalable file storage
+
+## 📈 Future Enhancements
+
+- **Real-time Chat**: Direct messaging between HR and candidates
+- **Video Interviews**: Integrated video calling functionality
+- **Advanced Analytics**: Detailed reporting and analytics dashboard
+- **Mobile App**: Native mobile application development
+- **AI Integration**: Resume parsing and job matching algorithms
+- **Multi-language Support**: Internationalization for global reach
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request
+4. Add tests if applicable
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+**Note**: This is a production-ready application with comprehensive features for job portal management. The system is designed to handle real-world recruitment processes with proper security, scalability, and user experience considerations.
