@@ -2,12 +2,12 @@
 
 ## 🔐 Credentials
 
-### Owner Login (HR Management)
+### Owner Login (HR)
 
 - **Email**: owner123@gmail.com
 - **Password**: owner123
 
-**Note**: After owner login, you have rights to create new HR users, decide their scope, and share email/password. HR users can later reset their passwords.
+**Note**: After hr's owner login, you have rights to create new HR users, decide their scope, and share email/password. HR users can later reset their passwords.
 
 ---
 
