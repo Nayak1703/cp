@@ -78,9 +78,9 @@ export default function MyProfile({ userData }: MyProfileProps) {
 
       if (response.ok && result.success) {
         // Sign out the user and clear session
-        await signOut({ 
+        await signOut({
           callbackUrl: "/",
-          redirect: true 
+          redirect: true,
         });
       } else {
         alert(result.error || "Failed to delete profile");
@@ -436,10 +436,14 @@ export default function MyProfile({ userData }: MyProfileProps) {
                 <div className="p-2 bg-red-500/20 rounded-lg">
                   <Trash2 className="w-5 h-5 text-red-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Delete Profile</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  Delete Profile
+                </h3>
               </div>
               <p className="text-slate-400 text-sm mb-4">
-                This action will permanently delete your profile and all associated data including posted jobs. This action cannot be undone.
+                This action will permanently delete your profile and all
+                associated data including posted jobs. This action cannot be
+                undone.
               </p>
               <button
                 onClick={handleDeleteProfile}
@@ -448,8 +452,6 @@ export default function MyProfile({ userData }: MyProfileProps) {
                 <Trash2 className="w-4 h-4" />
                 <span>Delete Profile</span>
               </button>
-                </form>
-              )}
             </div>
           </div>
         </div>
