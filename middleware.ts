@@ -11,9 +11,8 @@ export async function middleware(request: NextRequest) {
 
     // Allow requests from Vercel domain and localhost
     const allowedOrigins = [
-      "https://your-vercel-domain.vercel.app", // Replace with your actual Vercel domain
+      "https://cp-iota-beryl.vercel.app/", // Replace with your actual Vercel domain
       "http://localhost:3000",
-      "http://localhost:3001",
     ];
 
     const origin = request.headers.get("origin");
