@@ -78,7 +78,6 @@ export const generateResumeKey = (
   originalName: string,
   candidateId: string
 ): string => {
-  const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "_");
   return `resumes/${candidateId}.pdf`;
 };
 
