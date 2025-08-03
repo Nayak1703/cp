@@ -1,10 +1,10 @@
 // app/api/auth/get-user-data/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -39,35 +39,88 @@ export async function GET(request: NextRequest) {
     }
 
     // Return user data based on role
+    const baseUserData = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+    };
+
+    if (session.user.userType === "hr") {
+      // Type guard to check if userData has HR properties
+      const hasHRProperties = (
+        data: typeof userData
+      ): data is typeof userData & {
+        scope: string;
+        designation: string;
+        phoneNo?: string;
+      } => {
+        return "scope" in data && "designation" in data;
+      };
+
+      if (hasHRProperties(userData)) {
+        return NextResponse.json({
+          userType: session.user.userType,
+          name: `${userData.firstName} ${userData.lastName}`,
+          id: userData.id,
+          userData: {
+            ...baseUserData,
+            scope: userData.scope,
+            designation: userData.designation,
+            phoneNo: userData.phoneNo,
+          },
+        });
+      }
+    } else {
+      // Type guard to check if userData has candidate properties
+      const hasCandidateProperties = (
+        data: typeof userData
+      ): data is typeof userData & {
+        age?: number;
+        currentRole?: string;
+        totalExperience?: string;
+        location?: string;
+        expectedCTC?: string;
+        skills?: string;
+        portfolioLink?: string;
+        githubLink?: string;
+        linkedinLink?: string;
+        twitterLink?: string;
+        resume?: string;
+        readyToRelocate?: boolean;
+      } => {
+        return "age" in data || "currentRole" in data;
+      };
+
+      if (hasCandidateProperties(userData)) {
+        return NextResponse.json({
+          userType: session.user.userType,
+          name: `${userData.firstName} ${userData.lastName}`,
+          id: userData.id,
+          userData: {
+            ...baseUserData,
+            age: userData.age,
+            currentRole: userData.currentRole,
+            totalExperience: userData.totalExperience,
+            location: userData.location,
+            expectedCTC: userData.expectedCTC,
+            skills: userData.skills,
+            portfolioLink: userData.portfolioLink,
+            githubLink: userData.githubLink,
+            linkedinLink: userData.linkedinLink,
+            twitterLink: userData.twitterLink,
+            resume: userData.resume,
+            readyToRelocate: userData.readyToRelocate,
+          },
+        });
+      }
+    }
+
+    // Fallback response
     return NextResponse.json({
       userType: session.user.userType,
       name: `${userData.firstName} ${userData.lastName}`,
       id: userData.id,
-      userData: {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        // Add other relevant fields based on role
-        ...(session.user.userType === "hr" && {
-          scope: userData.scope,
-          designation: userData.designation,
-          phoneNo: userData.phoneNo,
-        }),
-        ...(session.user.userType === "candidate" && {
-          age: userData.age,
-          currentRole: userData.currentRole,
-          totalExperience: userData.totalExperience,
-          location: userData.location,
-          expectedCTC: userData.expectedCTC,
-          skills: userData.skills,
-          portfolioLink: userData.portfolioLink,
-          githubLink: userData.githubLink,
-          linkedinLink: userData.linkedinLink,
-          twitterLink: userData.twitterLink,
-          resume: userData.resume,
-          readyToRelocate: userData.readyToRelocate,
-        }),
-      },
+      userData: baseUserData,
     });
   } catch (error) {
     console.error("Get user data error:", error);

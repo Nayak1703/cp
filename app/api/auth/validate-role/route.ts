@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
       valid: false,
       error: "InvalidRole",
     });
-  } catch (error) {
+  } catch (_error) {
+    console.error("Error validating role:", _error);
     return NextResponse.json({
       valid: false,
       error: "ServerError",

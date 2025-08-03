@@ -3,13 +3,23 @@
 import { useState } from "react";
 import { X, User, Mail, Phone, Shield, Briefcase } from "lucide-react";
 
+interface HRFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNo: string;
+  designation: string;
+  scope: string;
+}
+
 interface AddHRModalProps {
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: HRFormData) => void;
 }
 
 export default function AddHRModal({ onClose, onSubmit }: AddHRModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<HRFormData>({
     firstName: "",
     lastName: "",
     email: "",
@@ -20,7 +30,9 @@ export default function AddHRModal({ onClose, onSubmit }: AddHRModalProps) {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -29,9 +41,15 @@ export default function AddHRModal({ onClose, onSubmit }: AddHRModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.designation) {
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.password ||
+      !formData.designation
+    ) {
       alert("Please fill in all required fields");
       return;
     }
@@ -206,4 +224,4 @@ export default function AddHRModal({ onClose, onSubmit }: AddHRModalProps) {
       </div>
     </div>
   );
-} 
+}

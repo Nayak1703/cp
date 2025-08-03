@@ -2,14 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Briefcase,
-  MapPin,
-  Clock,
-  User,
-  Calendar,
-} from "lucide-react";
+import { ArrowLeft, User, Calendar } from "lucide-react";
 import { EXPERIENCE_LABELS } from "@/src/constants";
 
 interface Job {

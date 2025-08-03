@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch saved jobs with job details
-    const savedJobs = await (db as any).SavedJobs.findMany({
+    const savedJobs = await db.savedJobs.findMany({
       where: { candidateId: candidate.id },
       include: {
         job: {

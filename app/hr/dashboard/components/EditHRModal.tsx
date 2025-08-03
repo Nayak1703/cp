@@ -13,15 +13,29 @@ interface HRUser {
   phoneNo?: string;
 }
 
+interface HRFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: string;
+  designation: string;
+  scope: string;
+}
+
 interface EditHRModalProps {
   user: HRUser;
   currentUserScope: string;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: HRFormData) => void;
 }
 
-export default function EditHRModal({ user, currentUserScope, onClose, onSubmit }: EditHRModalProps) {
-  const [formData, setFormData] = useState({
+export default function EditHRModal({
+  user,
+  currentUserScope,
+  onClose,
+  onSubmit,
+}: EditHRModalProps) {
+  const [formData, setFormData] = useState<HRFormData>({
     firstName: "",
     lastName: "",
     email: "",
@@ -42,7 +56,9 @@ export default function EditHRModal({ user, currentUserScope, onClose, onSubmit 
     });
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -51,9 +67,14 @@ export default function EditHRModal({ user, currentUserScope, onClose, onSubmit 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.designation) {
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.designation
+    ) {
       alert("Please fill in all required fields");
       return;
     }
@@ -72,14 +93,14 @@ export default function EditHRModal({ user, currentUserScope, onClose, onSubmit 
       owner: ["admin", "moderator", "participant"],
       admin: ["moderator", "participant"],
       moderator: ["participant"],
-      participant: []
+      participant: [],
     };
 
     const availableScopes = scopeHierarchy[currentUserScope] || [];
-    
-    return availableScopes.map(scope => ({
+
+    return availableScopes.map((scope) => ({
       value: scope,
-      label: scope.charAt(0).toUpperCase() + scope.slice(1)
+      label: scope.charAt(0).toUpperCase() + scope.slice(1),
     }));
   };
 
@@ -227,4 +248,4 @@ export default function EditHRModal({ user, currentUserScope, onClose, onSubmit 
       </div>
     </div>
   );
-} 
+}

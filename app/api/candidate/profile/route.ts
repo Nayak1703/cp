@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -113,7 +113,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -138,12 +138,12 @@ export async function DELETE(request: NextRequest) {
 
     // Delete related records first (cascade delete)
     // Delete applications
-    await (db as any).Applications.deleteMany({
+    await db.applications.deleteMany({
       where: { candidateId: candidate.id },
     });
 
     // Delete saved jobs
-    await (db as any).SavedJobs.deleteMany({
+    await db.savedJobs.deleteMany({
       where: { candidateId: candidate.id },
     });
 

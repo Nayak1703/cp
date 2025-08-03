@@ -62,13 +62,14 @@ export default function CandidateDashboard() {
       }
 
       // If userType is set but wrong, redirect
-      if (session.user.userType && session.user.userType !== "candidate") {
+      if (session.user.userType) {
         if (session.user.userType === "hr") {
           router.push("/hr/dashboard");
-        } else {
+          return;
+        } else if (session.user.userType !== "candidate") {
           router.push("/login");
+          return;
         }
-        return;
       }
 
       // If userType is not set, validate if user exists in candidate table

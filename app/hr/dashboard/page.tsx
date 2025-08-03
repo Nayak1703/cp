@@ -36,7 +36,7 @@ export default function HRDashboard() {
         try {
           const response = await fetch("/api/auth/get-user-data");
           const result = await response.json();
-          
+
           if (response.ok) {
             setUserData(result.userData);
             setLoading(false);
@@ -51,13 +51,14 @@ export default function HRDashboard() {
       }
 
       // If userType is set but wrong, redirect
-      if (session.user.userType && session.user.userType !== "hr") {
+      if (session.user.userType) {
         if (session.user.userType === "candidate") {
           router.push("/candidate/dashboard");
-        } else {
+          return;
+        } else if (session.user.userType !== "hr") {
           router.push("/login");
+          return;
         }
-        return;
       }
 
       // If userType is not set, validate if user exists in HR table

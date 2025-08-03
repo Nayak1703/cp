@@ -42,18 +42,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause
-    const where: Record<string, any> = {
+    const where: {
+      jobId: number;
+      applicationStatus?: "REVIEWING" | "SHORTLISTED" | "REJECTED";
+    } = {
       jobId: parseInt(jobId),
     };
 
     if (status) {
       // Map tab names to database enum values
-      const statusMap: Record<string, string> = {
+      const statusMap: Record<
+        string,
+        "REVIEWING" | "SHORTLISTED" | "REJECTED"
+      > = {
         reviewing: "REVIEWING",
         shortlisted: "SHORTLISTED",
         rejected: "REJECTED",
       };
-      where.applicationStatus = statusMap[status] || status.toUpperCase();
+      where.applicationStatus =
+        statusMap[status] ||
+        (status.toUpperCase() as "REVIEWING" | "SHORTLISTED" | "REJECTED");
     }
 
     // Fetch applications with candidate information
@@ -78,13 +86,13 @@ export async function GET(request: NextRequest) {
 
     if (location) {
       filteredApplications = filteredApplications.filter(
-        (app: any) => app.candidate.location === location
+        (app) => app.candidate.location === location
       );
     }
 
     if (experience) {
       filteredApplications = filteredApplications.filter(
-        (app: any) => app.candidate.totalExperience === experience
+        (app) => app.candidate.totalExperience === experience
       );
     }
 

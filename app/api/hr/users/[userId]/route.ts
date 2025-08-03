@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
-export async function PUT(
+export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,57 +19,103 @@ export async function PUT(
     }
 
     // Check if current user exists in HR table
-    const currentHR = await db.hrInfo.findUnique({
+    const currentUser = await db.hrInfo.findUnique({
       where: { email: session.user.email },
     });
 
-    if (!currentHR) {
+    if (!currentUser) {
       return NextResponse.json(
         { success: false, error: "HR user not found" },
         { status: 404 }
       );
     }
 
-    // Check if target user exists
-    const targetUser = await db.hrInfo.findUnique({
-      where: { id: params.userId },
-    });
+    const { userId } = await context.params;
 
-    if (!targetUser) {
+    // Check if user has permission to view this user
+    if (currentUser.scope === "participant") {
       return NextResponse.json(
-        { success: false, error: "Target user not found" },
-        { status: 404 }
-      );
-    }
-
-    // Check permissions based on scope hierarchy
-    const canManageUser = (currentScope: string, targetScope: string) => {
-      const scopeHierarchy = {
-        owner: ["admin", "moderator", "participant"],
-        admin: ["moderator", "participant"],
-        moderator: ["participant"],
-        participant: []
-      };
-
-      return scopeHierarchy[currentScope as keyof typeof scopeHierarchy]?.includes(targetScope) || false;
-    };
-
-    if (!canManageUser(currentHR.scope, targetUser.scope)) {
-      return NextResponse.json(
-        { success: false, error: "Insufficient permissions to manage this user" },
+        { success: false, error: "Insufficient permissions" },
         { status: 403 }
       );
     }
 
+    // Get the target user
+    const targetUser = await db.hrInfo.findUnique({
+      where: { id: userId },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if current user has permission to view this user based on scope hierarchy
+    const scopeHierarchy: Record<string, string[]> = {
+      owner: ["admin", "moderator", "participant"],
+      admin: ["moderator", "participant"],
+      moderator: ["participant"],
+      participant: [],
+    };
+
+    const canView =
+      scopeHierarchy[currentUser.scope]?.includes(targetUser.scope) ||
+      currentUser.id === targetUser.id;
+
+    if (!canView) {
+      return NextResponse.json(
+        { success: false, error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    // Remove sensitive information
+    const { password, ...userData } = targetUser;
+
+    return NextResponse.json({
+      success: true,
+      user: userData,
+    });
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch user" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Check if current user exists in HR table
+    const currentUser = await db.hrInfo.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: "HR user not found" },
+        { status: 404 }
+      );
+    }
+
+    const { userId } = await context.params;
     const body = await request.json();
-    const {
-      firstName,
-      lastName,
-      email,
-      phoneNo,
-      designation,
-      scope,
-    } = body;
+    const { firstName, lastName, email, phoneNo, designation, scope } = body;
 
     // Validate required fields
     if (!firstName || !lastName || !email || !designation || !scope) {
@@ -78,32 +125,65 @@ export async function PUT(
       );
     }
 
-    // Check if email already exists (excluding current user)
-    const existingUser = await db.hrInfo.findFirst({
-      where: {
-        email,
-        id: { not: params.userId },
-      },
-    });
-
-    if (existingUser) {
+    // Check if user has permission to edit this user
+    if (currentUser.scope === "participant") {
       return NextResponse.json(
-        { success: false, error: "Email already exists" },
-        { status: 400 }
-      );
-    }
-
-    // Check if new scope is within current user's permission
-    if (!canManageUser(currentHR.scope, scope)) {
-      return NextResponse.json(
-        { success: false, error: "Cannot assign scope higher than your permission level" },
+        { success: false, error: "Insufficient permissions" },
         { status: 403 }
       );
     }
 
-    // Update HR user
-    const updatedHR = await db.hrInfo.update({
-      where: { id: params.userId },
+    // Get the target user
+    const targetUser = await db.hrInfo.findUnique({
+      where: { id: userId },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if current user has permission to edit this user based on scope hierarchy
+    const scopeHierarchy: Record<string, string[]> = {
+      owner: ["admin", "moderator", "participant"],
+      admin: ["moderator", "participant"],
+      moderator: ["participant"],
+      participant: [],
+    };
+
+    const canEdit =
+      scopeHierarchy[currentUser.scope]?.includes(targetUser.scope) ||
+      currentUser.id === targetUser.id;
+
+    if (!canEdit) {
+      return NextResponse.json(
+        { success: false, error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    // Check if email is already taken by another user
+    if (email !== targetUser.email) {
+      const existingUser = await db.hrInfo.findFirst({
+        where: {
+          email,
+          id: { not: userId },
+        },
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          { success: false, error: "Email already exists" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Update user
+    const updatedUser = await db.hrInfo.update({
+      where: { id: userId },
       data: {
         firstName,
         lastName,
@@ -114,23 +194,18 @@ export async function PUT(
       },
     });
 
+    // Remove sensitive information
+    const { password, ...userData } = updatedUser;
+
     return NextResponse.json({
       success: true,
-      message: "HR user updated successfully",
-      user: {
-        id: updatedHR.id,
-        firstName: updatedHR.firstName,
-        lastName: updatedHR.lastName,
-        email: updatedHR.email,
-        scope: updatedHR.scope,
-        designation: updatedHR.designation,
-        phoneNo: updatedHR.phoneNo,
-      },
+      user: userData,
+      message: "User updated successfully",
     });
   } catch (error) {
-    console.error("Error updating HR user:", error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update HR user" },
+      { success: false, error: "Failed to update user" },
       { status: 500 }
     );
   }
@@ -138,7 +213,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -151,70 +226,80 @@ export async function DELETE(
     }
 
     // Check if current user exists in HR table
-    const currentHR = await db.hrInfo.findUnique({
+    const currentUser = await db.hrInfo.findUnique({
       where: { email: session.user.email },
     });
 
-    if (!currentHR) {
+    if (!currentUser) {
       return NextResponse.json(
         { success: false, error: "HR user not found" },
         { status: 404 }
       );
     }
 
-    // Check if target user exists
+    const { userId } = await context.params;
+
+    // Check if user has permission to delete users
+    if (currentUser.scope === "participant") {
+      return NextResponse.json(
+        { success: false, error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    // Get the target user
     const targetUser = await db.hrInfo.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
     });
 
     if (!targetUser) {
       return NextResponse.json(
-        { success: false, error: "Target user not found" },
+        { success: false, error: "User not found" },
         { status: 404 }
       );
     }
 
+    // Check if current user has permission to delete this user based on scope hierarchy
+    const scopeHierarchy: Record<string, string[]> = {
+      owner: ["admin", "moderator", "participant"],
+      admin: ["moderator", "participant"],
+      moderator: ["participant"],
+      participant: [],
+    };
+
+    const canDelete = scopeHierarchy[currentUser.scope]?.includes(
+      targetUser.scope
+    );
+
+    if (!canDelete) {
+      return NextResponse.json(
+        { success: false, error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
     // Prevent self-deletion
-    if (targetUser.id === currentHR.id) {
+    if (currentUser.id === targetUser.id) {
       return NextResponse.json(
         { success: false, error: "Cannot delete your own account" },
         { status: 400 }
       );
     }
 
-    // Check permissions based on scope hierarchy
-    const canManageUser = (currentScope: string, targetScope: string) => {
-      const scopeHierarchy = {
-        owner: ["admin", "moderator", "participant"],
-        admin: ["moderator", "participant"],
-        moderator: ["participant"],
-        participant: []
-      };
-
-      return scopeHierarchy[currentScope as keyof typeof scopeHierarchy]?.includes(targetScope) || false;
-    };
-
-    if (!canManageUser(currentHR.scope, targetUser.scope)) {
-      return NextResponse.json(
-        { success: false, error: "Insufficient permissions to delete this user" },
-        { status: 403 }
-      );
-    }
-
-    // Delete HR user
+    // Delete user
     await db.hrInfo.delete({
-      where: { id: params.userId },
+      where: { id: userId },
     });
 
     return NextResponse.json({
       success: true,
-      message: "HR user deleted successfully",
+      message: "User deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting HR user:", error);
+    console.error("Error deleting user:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to delete HR user" },
+      { success: false, error: "Failed to delete user" },
       { status: 500 }
     );
   }
-} 
+}

@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
-  { params }: { params: { applicationId: string } }
+  context: { params: Promise<{ applicationId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,18 +29,7 @@ export async function PATCH(
       );
     }
 
-    // Check if HR has permission to update status (not participants)
-    if (hrUser.scope === "participants") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Insufficient permissions to update application status",
-        },
-        { status: 403 }
-      );
-    }
-
-    const { applicationId } = params;
+    const { applicationId } = await context.params;
     const body = await request.json();
     const { status } = body;
 
@@ -60,28 +49,31 @@ export async function PATCH(
       );
     }
 
-    // Check if application exists
-    const existingApplication = await db.applications.findUnique({
-      where: { applicationId },
-    });
-
-    if (!existingApplication) {
-      return NextResponse.json(
-        { success: false, error: "Application not found" },
-        { status: 404 }
-      );
-    }
-
     // Update application status
     const updatedApplication = await db.applications.update({
       where: { applicationId },
       data: { applicationStatus: status },
+      include: {
+        candidate: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        job: {
+          select: {
+            role: true,
+            designation: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
       application: updatedApplication,
-      message: "Application status updated successfully",
+      message: `Application status updated to ${status}`,
     });
   } catch (error) {
     console.error("Error updating application status:", error);

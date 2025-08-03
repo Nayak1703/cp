@@ -20,10 +20,15 @@ interface Job {
   };
 }
 
+interface JobUpdateData {
+  jobDescription: string;
+  jobStatus: string;
+}
+
 interface EditJobModalProps {
   job: Job;
   onClose: () => void;
-  onSubmit: (jobId: number, data: any) => void;
+  onSubmit: (jobId: number, data: JobUpdateData) => void;
 }
 
 export default function EditJobModal({

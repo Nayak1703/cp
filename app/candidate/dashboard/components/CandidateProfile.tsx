@@ -3,25 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Briefcase,
-  Calendar,
-  DollarSign,
-  Code,
-  Globe,
-  Github,
-  Linkedin,
-  Twitter,
-  FileText,
-  Edit,
-  Trash2,
-  Plus,
-  ArrowLeft,
-} from "lucide-react";
+import { FileText, Edit, Trash2, Plus, ArrowLeft } from "lucide-react";
 import { LOCATIONS } from "@/src/constants";
 import EducationModal from "./EducationModal";
 import WorkModal from "./WorkModal";
@@ -74,10 +56,6 @@ export default function CandidateProfile() {
   const [editing, setEditing] = useState(false);
   const [showEducationModal, setShowEducationModal] = useState(false);
   const [showWorkModal, setShowWorkModal] = useState(false);
-  const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(
-    []
-  );
-  const [workEntries, setWorkEntries] = useState<WorkEntry[]>([]);
   const [educationInfo, setEducationInfo] = useState<EducationEntry[]>([]);
   const [workInfo, setWorkInfo] = useState<WorkEntry[]>([]);
 
@@ -96,7 +74,6 @@ export default function CandidateProfile() {
     twitterLink: "",
     readyToRelocate: false,
   });
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUploading, setResumeUploading] = useState(false);
 
   useEffect(() => {
@@ -147,9 +124,8 @@ export default function CandidateProfile() {
           }
         }
       }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
+    } catch (_e) {
+      console.error("Error fetching profile:", _e);
       setLoading(false);
     }
   };
@@ -159,19 +135,18 @@ export default function CandidateProfile() {
       const response = await fetch("/api/candidate/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          education: JSON.stringify(educationInfo),
-          work: JSON.stringify(workInfo),
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
         setEditing(false);
         fetchProfile(); // Refresh profile data
+      } else {
+        alert("Failed to update profile");
       }
-    } catch (error) {
-      console.error("Error updating profile:", error);
+    } catch (_e) {
+      console.error("Error updating profile:", _e);
+      alert("Failed to update profile");
     }
   };
 
@@ -192,8 +167,9 @@ export default function CandidateProfile() {
       if (response.ok) {
         router.push("/");
       }
-    } catch (error) {
-      console.error("Error deleting profile:", error);
+    } catch (_e) {
+      console.error("Error deleting profile:", _e);
+      alert("Failed to delete profile");
     }
   };
 
@@ -245,14 +221,13 @@ export default function CandidateProfile() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setResumeFile(null);
         fetchProfile(); // Refresh profile to show new resume
         alert("Resume uploaded successfully!");
       } else {
         alert(data.error || "Failed to upload resume");
       }
-    } catch (error) {
-      console.error("Error uploading resume:", error);
+    } catch (_e) {
+      console.error("Error uploading resume:", _e);
       alert("Failed to upload resume");
     } finally {
       setResumeUploading(false);

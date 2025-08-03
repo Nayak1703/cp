@@ -42,36 +42,91 @@ export async function POST(request: NextRequest) {
     }
 
     // User exists in the requested role's table
+    const baseUserData = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+    };
+
+    if (requestedRole === "hr") {
+      // Type guard to check if userData has HR properties
+      const hasHRProperties = (
+        data: typeof userData
+      ): data is typeof userData & {
+        scope: string;
+        designation: string;
+        phoneNo?: string;
+      } => {
+        return "scope" in data && "designation" in data;
+      };
+
+      if (hasHRProperties(userData)) {
+        return NextResponse.json({
+          valid: true,
+          userType: requestedRole,
+          name: `${userData.firstName} ${userData.lastName}`,
+          id: userData.id,
+          userData: {
+            ...baseUserData,
+            scope: userData.scope,
+            designation: userData.designation,
+            phoneNo: userData.phoneNo,
+          },
+        });
+      }
+    } else {
+      // Type guard to check if userData has candidate properties
+      const hasCandidateProperties = (
+        data: typeof userData
+      ): data is typeof userData & {
+        age?: number;
+        currentRole?: string;
+        totalExperience?: string;
+        location?: string;
+        expectedCTC?: string;
+        skills?: string;
+        portfolioLink?: string;
+        githubLink?: string;
+        linkedinLink?: string;
+        twitterLink?: string;
+        resume?: string;
+        readyToRelocate?: boolean;
+      } => {
+        return "age" in data || "currentRole" in data;
+      };
+
+      if (hasCandidateProperties(userData)) {
+        return NextResponse.json({
+          valid: true,
+          userType: requestedRole,
+          name: `${userData.firstName} ${userData.lastName}`,
+          id: userData.id,
+          userData: {
+            ...baseUserData,
+            age: userData.age,
+            currentRole: userData.currentRole,
+            totalExperience: userData.totalExperience,
+            location: userData.location,
+            expectedCTC: userData.expectedCTC,
+            skills: userData.skills,
+            portfolioLink: userData.portfolioLink,
+            githubLink: userData.githubLink,
+            linkedinLink: userData.linkedinLink,
+            twitterLink: userData.twitterLink,
+            resume: userData.resume,
+            readyToRelocate: userData.readyToRelocate,
+          },
+        });
+      }
+    }
+
+    // Fallback response
     return NextResponse.json({
       valid: true,
       userType: requestedRole,
       name: `${userData.firstName} ${userData.lastName}`,
       id: userData.id,
-      userData: {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        // Add other relevant fields based on role
-        ...(requestedRole === "hr" && {
-          scope: userData.scope,
-          designation: userData.designation,
-          phoneNo: userData.phoneNo,
-        }),
-        ...(requestedRole === "candidate" && {
-          age: userData.age,
-          currentRole: userData.currentRole,
-          totalExperience: userData.totalExperience,
-          location: userData.location,
-          expectedCTC: userData.expectedCTC,
-          skills: userData.skills,
-          portfolioLink: userData.portfolioLink,
-          githubLink: userData.githubLink,
-          linkedinLink: userData.linkedinLink,
-          twitterLink: userData.twitterLink,
-          resume: userData.resume,
-          readyToRelocate: userData.readyToRelocate,
-        }),
-      },
+      userData: baseUserData,
     });
   } catch (error) {
     console.error("Validate user role error:", error);

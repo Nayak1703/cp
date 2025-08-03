@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -99,7 +99,14 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !password || !designation || !scope) {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !designation ||
+      !scope
+    ) {
       return NextResponse.json(
         { success: false, error: "All required fields must be provided" },
         { status: 400 }

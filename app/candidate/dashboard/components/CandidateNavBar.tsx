@@ -1,11 +1,10 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Building2, User, LogOut } from "lucide-react";
 
 export default function CandidateNavBar() {
-  const { data: session } = useSession();
   const router = useRouter();
 
   const handleLogout = async () => {

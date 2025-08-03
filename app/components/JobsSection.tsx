@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Briefcase, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-import { JobFilters as JobFiltersType } from "@/src/types";
+import { JobFilters as JobFiltersType, Job } from "@/src/types";
 import JobFilters from "./JobFilters";
 import JobCard from "./JobCard";
 
@@ -15,7 +15,7 @@ export default function JobsSection() {
     location: "",
     experience: "",
   });
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

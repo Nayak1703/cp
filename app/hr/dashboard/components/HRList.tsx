@@ -29,6 +29,16 @@ interface CurrentUser {
   scope: string;
 }
 
+interface HRFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  phoneNo: string;
+  designation: string;
+  scope: string;
+}
+
 export default function HRList() {
   const [hrUsers, setHrUsers] = useState<HRUser[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
@@ -74,7 +84,7 @@ export default function HRList() {
     }
   };
 
-  const handleAddHR = async (hrData: any) => {
+  const handleAddHR = async (hrData: HRFormData) => {
     try {
       const response = await fetch("/api/hr/users", {
         method: "POST",
@@ -96,7 +106,7 @@ export default function HRList() {
     }
   };
 
-  const handleEditHR = async (hrData: any) => {
+  const handleEditHR = async (hrData: HRFormData) => {
     try {
       const response = await fetch(`/api/hr/users/${selectedUser?.id}`, {
         method: "PUT",

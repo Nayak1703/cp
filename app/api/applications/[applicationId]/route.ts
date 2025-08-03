@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { applicationId: string } }
+  context: { params: Promise<{ applicationId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,7 +29,7 @@ export async function GET(
       );
     }
 
-    const { applicationId } = params;
+    const { applicationId } = await context.params;
 
     // Fetch application with candidate and job information
     const application = await db.applications.findUnique({

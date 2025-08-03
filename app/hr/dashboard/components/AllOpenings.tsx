@@ -28,6 +28,20 @@ interface AllOpeningsProps {
   canPostJob: boolean;
 }
 
+interface JobData {
+  role: string;
+  designation: string;
+  experience: string;
+  department: string;
+  location: string;
+  jobDescription: string;
+}
+
+interface JobUpdateData {
+  jobDescription: string;
+  jobStatus: string;
+}
+
 export default function AllOpenings({ canPostJob }: AllOpeningsProps) {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -71,7 +85,7 @@ export default function AllOpenings({ canPostJob }: AllOpeningsProps) {
     }
   };
 
-  const handlePostJob = async (jobData: any) => {
+  const handlePostJob = async (jobData: JobData) => {
     try {
       const response = await fetch("/api/jobs", {
         method: "POST",
@@ -90,7 +104,7 @@ export default function AllOpenings({ canPostJob }: AllOpeningsProps) {
     }
   };
 
-  const handleEditJob = async (jobId: number, jobData: any) => {
+  const handleEditJob = async (jobId: number, jobData: JobUpdateData) => {
     try {
       const response = await fetch(`/api/jobs/${jobId}`, {
         method: "PUT",

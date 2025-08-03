@@ -39,6 +39,7 @@ export interface Job {
   experience: string;
   department: string;
   location: string;
+  jobDescription: string;
   postedOn: string;
   hr: {
     firstName: string;
