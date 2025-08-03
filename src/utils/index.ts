@@ -16,3 +16,6 @@ export const getExperienceText = (experience: string): string => {
     experience
   );
 };
+
+// Export API utilities
+export * from "./api";

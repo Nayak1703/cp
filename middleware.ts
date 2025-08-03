@@ -5,6 +5,41 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Handle CORS for API routes
+  if (pathname.startsWith("/api/")) {
+    const response = NextResponse.next();
+
+    // Allow requests from Vercel domain and localhost
+    const allowedOrigins = [
+      "https://your-vercel-domain.vercel.app", // Replace with your actual Vercel domain
+      "http://localhost:3000",
+      "http://localhost:3001",
+    ];
+
+    const origin = request.headers.get("origin");
+
+    if (origin && allowedOrigins.includes(origin)) {
+      response.headers.set("Access-Control-Allow-Origin", origin);
+    }
+
+    response.headers.set(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    response.headers.set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+
+    // Handle preflight requests
+    if (request.method === "OPTIONS") {
+      return new NextResponse(null, { status: 200, headers: response.headers });
+    }
+
+    return response;
+  }
+
   // Only apply middleware to dashboard routes
   if (
     pathname.startsWith("/hr/dashboard") ||
@@ -71,5 +106,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/hr/dashboard/:path*", "/candidate/dashboard/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/hr/dashboard/:path*",
+    "/candidate/dashboard/:path*",
+  ],
 };
