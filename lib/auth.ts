@@ -182,11 +182,16 @@ export const authOptions = {
             token.name = `${hr.firstName} ${hr.lastName}`;
             token.id = hr.id;
             console.log("JWT Callback - Set Google OAuth user to hr");
-          } else {
+          } else if (!candidate && !hr) {
             console.log(
               "JWT Callback - Google OAuth user not found in database yet"
             );
             // User will be created by the validate-role API
+            // Don't set userType yet - let the callback page handle it
+          } else {
+            console.log(
+              "JWT Callback - User exists in both tables, this shouldn't happen"
+            );
           }
         } catch (error) {
           console.error(

@@ -37,6 +37,7 @@ function GoogleCallbackContent() {
           body: JSON.stringify({
             email: session.user.email,
             selectedRole,
+            name: session.user.name, // Pass the Google user's name
           }),
         });
 
@@ -54,12 +55,32 @@ function GoogleCallbackContent() {
           return;
         }
 
-        // If a new user was created, refresh the session to get updated user data
+        // If a new user was created, set the session role and redirect
         if (validation.created) {
-          console.log("New user created, refreshing session");
-          // Force a session refresh by redirecting to the same page
-          // This will trigger the JWT callback to read the new user data
-          window.location.reload();
+          console.log("New user created, setting session role");
+
+          // Set the session role for the newly created user
+          const setRoleResponse = await fetch("/api/auth/set-session-role", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: session.user.email,
+              userType: selectedRole,
+            }),
+          });
+
+          if (!setRoleResponse.ok) {
+            console.error("Failed to set session role");
+            router.push("/login?error=SessionError");
+            return;
+          }
+
+          // Redirect to appropriate dashboard
+          if (selectedRole === "hr") {
+            router.push("/hr/dashboard");
+          } else {
+            router.push("/candidate/dashboard");
+          }
           return;
         }
 

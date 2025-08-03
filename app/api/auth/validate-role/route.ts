@@ -4,9 +4,9 @@ import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, selectedRole } = await request.json();
+    const { email, selectedRole, name } = await request.json();
 
-    console.log("Validating role:", { email, selectedRole });
+    console.log("Validating role:", { email, selectedRole, name });
 
     if (selectedRole === "candidate") {
       const candidate = await db.candidateInfo.findUnique({
@@ -21,11 +21,21 @@ export async function POST(request: NextRequest) {
 
         // For Google OAuth users, create a new candidate account
         try {
+          // Parse the Google user's name
+          let firstName = "Google";
+          let lastName = "User";
+
+          if (name) {
+            const nameParts = name.split(" ");
+            firstName = nameParts[0] || "Google";
+            lastName = nameParts.slice(1).join(" ") || "User";
+          }
+
           const newCandidate = await db.candidateInfo.create({
             data: {
               email,
-              firstName: "Google", // Default values, user can update later
-              lastName: "User",
+              firstName,
+              lastName,
               password: "google-oauth-user", // Placeholder password for OAuth users
             },
           });
@@ -57,11 +67,21 @@ export async function POST(request: NextRequest) {
 
         // For Google OAuth users, create a new HR account
         try {
+          // Parse the Google user's name
+          let firstName = "Google";
+          let lastName = "HR";
+
+          if (name) {
+            const nameParts = name.split(" ");
+            firstName = nameParts[0] || "Google";
+            lastName = nameParts.slice(1).join(" ") || "HR";
+          }
+
           const newHR = await db.hrInfo.create({
             data: {
               email,
-              firstName: "Google", // Default values, user can update later
-              lastName: "HR",
+              firstName,
+              lastName,
               password: "google-oauth-user", // Placeholder password for OAuth users
               scope: "general", // Default scope
               designation: "HR Manager", // Default designation
